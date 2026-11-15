@@ -2590,6 +2590,30 @@ function miseRow(a0,a1,front,axis,dir){ let a=a0; while(a1-a>4){ let w=6+rnd()*3
   /* 仲之町の天水桶と、大門の脇の番所（四郎兵衛会所はのちの新吉原のもの。ここは想像の番所） */
   for(const z of [-175,-205,-235]) for(const x of [YW.nk[0]+.6,YW.nk[1]-.6]){ B.darkwood.add(new THREE.CylinderGeometry(.38,.4,.7,12),TM(x,.35,z)); block(x-.4,z-.4,x+.4,z+.4,'machi'); }
 }
+/* ---- 夜の元吉原: 提灯と行灯に灯がともり、見世の格子と2階の障子が明るく光り、通りの上には提灯の列 ---- */
+const YWN={g:new THREE.Group(),mats:[]}; GE.add(YWN.g); YWN.g.visible=false;
+{ const glowTex=(()=>{ const c=makeCanvas(128,128),g=c.getContext('2d'),r=g.createRadialGradient(64,64,0,64,64,64); r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(.18,'rgba(255,230,180,.85)'); r.addColorStop(.5,'rgba(255,160,80,.28)'); r.addColorStop(1,'rgba(255,120,40,0)'); g.fillStyle=r; g.fillRect(0,0,128,128); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; })();
+  const pts=[],cols=[],pool=[],strings=[]; const P3=(x,y,z,c)=>{ pts.push(x,y,z); cols.push(...c); };
+  const RED=[1,.42,.25],WARM=[1,.78,.45],WHITE=[1,.9,.7];
+  /* 見世の提灯（npc.js の YLAN と同じ位置） */ let k=0; for(const m of MISE){ const c=Math.cos(m.ry),s=Math.sin(m.ry); for(const off of [-1.2,1.2]){ const x=m.cx+(m.eo+off)*c+(m.F+.5)*s,z=m.cz-(m.eo+off)*s+(m.F+.5)*c; P3(x,2.2,z,(k++%2)?WHITE:RED); pool.push([x+s*1.4,z+c*1.4,2.6]); } }
+  /* 柱の行灯 */ for(let z=-244;z<-170;z+=12) for(const x of [506.7,515.3]){ P3(x,1.35,z+(x>510?6:0),WARM); pool.push([x,z+(x>510?6:0),3.2]); }
+  /* 大門の提灯 */ for(const x of [YW.gx-3.6,YW.gx+3.6]) P3(x,3.6,YW.z1+.6,RED);
+  /* 仲之町の上に張りわたした提灯の列（昼も赤い提灯が見える） */
+  for(let z=-246;z<-172;z+=9){ for(let i=0;i<7;i++){ const x=YW.nk[0]+.8+i*(YW.nk[1]-YW.nk[0]-1.6)/6,sag=.5*Math.sin(Math.PI*i/6),y=4.7-sag; strings.push([x,y,z]); P3(x,y-.15,z,i%2?RED:WHITE); }
+    B.darkwood.add(new THREE.BoxGeometry(YW.nk[1]-YW.nk[0],.03,.03),TM((YW.nk[0]+YW.nk[1])/2,4.75,z)); }
+  const lm=new THREE.MeshBasicMaterial({color:0xffffff}); { const g2=new THREE.CylinderGeometry(.17,.17,.32,10); const im=new THREE.InstancedMesh(g2,lm,strings.length); strings.forEach(([x,y,z],i)=>{ im.setMatrixAt(i,TM(x,y-.15,z)); im.setColorAt(i,new THREE.Color(i%2?0xd8402a:0xf2ead8)); }); GE.add(im); YWN.lan=im; YWN.lanMat=lm; }
+  /* 光の玉（加算合成でにじませる） */ const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3)); pg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
+  const pm=new THREE.PointsMaterial({map:glowTex,size:1.9,sizeAttenuation:true,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}); YWN.g.add(new THREE.Points(pg,pm)); YWN.mats.push([pm,'opacity',1]);
+  /* 地面に落ちる灯り */ const v=[],uv=[]; for(const [x,z,r] of pool) quad(v,uv,[x-r,.04,z+r],[x+r,.04,z+r],[x+r,.04,z-r],[x-r,.04,z-r],1,1);
+  const plm=new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:.55,color:0xffb070}); YWN.g.add(new THREE.Mesh(geoFrom(v,uv),plm)); YWN.mats.push([plm,'opacity',.55]);
+  /* 見世の内の灯り: 1階の格子の奥と2階の障子 */ const wv=[],wuv=[];
+  for(const m of MISE){ const M0=TM(m.cx,0,m.cz,m.ry),hw=(m.w-.15)/2,F=m.F; const add=(x0,x1,y0,y1,zz)=>{ const p=[[x0,y0,zz],[x1,y0,zz],[x1,y1,zz],[x0,y1,zz]].map(q=>new THREE.Vector3(...q).applyMatrix4(M0)); quad(wv,wuv,p[0].toArray(),p[1].toArray(),p[2].toArray(),p[3].toArray(),1,1); };
+    add(-hw+.3,hw-.3,.3,2.5,F+.05); add(-hw+.45,hw-.45,3.55,4.95,F+.035); }
+  const wm=new THREE.MeshBasicMaterial({color:0xf0a050,transparent:true,opacity:.78,toneMapped:false,side:THREE.DoubleSide}); YWN.g.add(new THREE.Mesh(geoFrom(wv,wuv),wm)); YWN.mats.push([wm,'opacity',.78]);
+  /* 遠くからも空がぼうっと明るく見える（不夜城） */ { const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute([511,14,-210, 511,8,-190, 511,8,-232],3)); const sm=new THREE.PointsMaterial({map:glowTex,size:70,sizeAttenuation:true,color:0xff9a50,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}); YWN.g.add(new THREE.Points(sg,sm)); YWN.mats.push([sm,'opacity',.22]); }
+}
+function ywNight(k){ YWN.g.visible=k>0; for(const [m,p,v] of YWN.mats) m[p]=v*Math.min(1,k); if(YWN.lanMat) YWN.lanMat.color.setScalar(1); }
+const inYW=()=>MODE==='edo'&&P.x>462&&P.x<560&&P.z<-148&&P.z>-264;
 B=BS; curSet=BSETS.shared;
 /* ================= 中に入れる建物 ================= */
 B=BE;
@@ -3039,7 +3063,7 @@ const TIMES=[
   {name:'夕',top:'#33467a',hor:'#f2a467',sun:[-.86,.09,.42],sunC:'#ff9550',sunI:1.5,hs:'#a993a7',hg:'#4b3b33',hi:.6,fog:'#c99580',exp:1.05,night:.15,lamp:.7},
   {name:'夜',top:'#060914',hor:'#1b2440',sun:[-.25,.62,.55],sunC:'#a8bde8',sunI:.3,hs:'#3a4a72',hg:'#101114',hi:.45,fog:'#182038',exp:1.15,night:1,lamp:2.2}];
 let timeIdx=1; const sunDir=V3(0,1,0);
-function updatePJ(dt){ const night=TIMES[timeIdx].night>.5&&MODE==='edo'; if(lantMesh) lantMesh.visible=night; nightLight.intensity=night?2.4:0; for(const b of boats) if(b.g.userData.torch) b.g.userData.torch.material=night?lantMat:M.lantern; }
+function updatePJ(dt){ const night=TIMES[timeIdx].night>.5&&MODE==='edo'; if(typeof ywNight==='function') ywNight(MODE==='edo'?TIMES[timeIdx].night:0); if(lantMesh) lantMesh.visible=night; nightLight.intensity=night?2.4:0; for(const b of boats) if(b.g.userData.torch) b.g.userData.torch.material=night?lantMat:M.lantern; }
 function applyTime(i){ timeIdx=i; const T=TIMES[i]; sunDir.set(...T.sun).normalize();
   skyMat.uniforms.top.value.set(T.top); skyMat.uniforms.hor.value.set(T.hor); skyMat.uniforms.sunDir.value.copy(sunDir); skyMat.uniforms.sunCol.value.set(T.sunC).multiplyScalar(T.night>.5?.5:1); skyMat.uniforms.stars.value=T.night>.5?.9:0;
   sun.color.set(T.sunC); sun.intensity=T.sunI; hemi.color.set(T.hs); hemi.groundColor.set(T.hg); hemi.intensity=T.hi; scene.fog.color.set(T.fog); renderer.toneMappingExposure=T.exp;
@@ -3490,7 +3514,7 @@ function d2(R){ return R.d/2-1.2; }
 /* 天守の中の人（江戸時代） */
 { const T=TEN.edo,F=T.FL,cx=T.cx,cz=T.cz; for(const [i,s,x,z,nm,say] of [[0,'ashigaru',-4,9,'穴蔵の番','この穴蔵には兵糧や武具が納めてある。上の階へは東の階段じゃ。'],[1,'samurai_a',-6,4,'天守番の侍','窓の銅の戸は、火の粉が入らぬよう閉めねばならぬのだが……。'],[3,'sam_kami',4,-3,'天守番','御殿の屋根があんなに小さく見える。'],[5,'sam_haori',2,3,'天守番','ここが最上階。西に富士、北東に筑波、東には江戸湊。将軍家のお膝元が一望じゃ。']]){
     npc(s,[[cx+x,cz+z]],0,nm,say,{fixed:true,y:F[i].y}); } }
-function updateChars(dt){ updateNPC(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?.45:timeIdx===2?.88:timeIdx===0?.95:1); }
+function updateChars(dt){ updateNPC(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?(typeof inYW==='function'&&inYW()?.9:.45):timeIdx===2?.88:timeIdx===0?.95:1); }
 /* タップで話す */
 const _pv=V3();
 function pickTalk(sx,sy){ let best=null,bd=1e9; for(const t of TALK){ if(t.it.hidden) continue; if(t.era!==MODE) continue; if(t.daily&&SCEN) continue; if(t.scen&&t.scen!==SCEN) continue; if(t.room&&P.room!==t.room) continue;
@@ -3655,7 +3679,7 @@ function goScenCam(){ if(scGround&&PH&&PH.gnd) goGround(); else goPhaseCam(); $(
 function goPhaseCam(){ if(!PH) return; const c=PH.cam; P.room=null; P.level=-1; P.x=c[0]; P.z=c[1]; P.yaw=c[2]; P.pitch=c[3]; P.mode=c[4]?'drone':'walk'; $('vView').textContent=c[4]?'空撮':'歩く'; P.y=c[4]?Math.max(70,groundH(P.x,P.z)+40):groundH(P.x,P.z)+1.6; }
 function updateScen(dt){ if(!SCEN) return; updateUnits(dt); updateTour(dt);
   if(!tour.on&&auto&&phT>(PH.dur||55)&&PHI<SCENS[SCEN].phases.length-1){ setPhase(PHI+1); goScenCam(); } }
-function updateChars(dt){ updateNPC(dt); updateScen(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?.45:timeIdx===2?.88:timeIdx===0?.95:1); }
+function updateChars(dt){ updateNPC(dt); updateScen(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?(typeof inYW==='function'&&inYW()?.9:.45):timeIdx===2?.88:timeIdx===0?.95:1); }
 /* ---------- 画面: 時代を選ぶ・場面の案内 ---------- */
 { const st=document.createElement('style'); st.textContent=`
 #eraSheet{position:fixed;inset:0;z-index:25;background:rgba(12,13,15,.92);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -3988,7 +4012,7 @@ try{ const m=new URLSearchParams(location.search).get('era'); if(m!=='modern'){ 
 ROOMS.forEach(R=>{ if(!R.exitZone||!R.spawn||!R.boxes) return; const ez=R.exitZone,sx=R.spawn[0],sz=R.spawn[1],cor={x0:Math.min(sx,ez.x0)-.6,x1:Math.max(sx,ez.x1)+.6,z0:Math.min(sz,ez.z0)-1.2,z1:Math.max(sz,ez.z1)+.6};
   R.boxes=R.boxes.filter(b=>!(b.x1+.25>cor.x0&&b.x0-.25<cor.x1&&b.z1+.25>cor.z0&&b.z0-.25<cor.z1)); });
 requestAnimationFrame(frame);
-window.__dbg={yaws:p=>[Array.from(decoRoomT.pages[p].A.yaw.array.slice(0,decoRoomT.pages[p].n)),Array.from(decoRoomT.pages[p].A.size.array.slice(0,2*decoRoomT.pages[p].n)).map(v=>+v.toFixed(2))],hideDR:()=>{decoRoomT.visible=false;return 1},crowd:()=>[decoRoomT.pages.map(p=>p.n),npcCrowd.pages.map(p=>p.n)],sprI:n=>sprInfo(n),groundH,roomOK,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
+window.__dbg={applyTime:i=>{applyTime(i);return 1},yaws:p=>[Array.from(decoRoomT.pages[p].A.yaw.array.slice(0,decoRoomT.pages[p].n)),Array.from(decoRoomT.pages[p].A.size.array.slice(0,2*decoRoomT.pages[p].n)).map(v=>+v.toFixed(2))],hideDR:()=>{decoRoomT.visible=false;return 1},crowd:()=>[decoRoomT.pages.map(p=>p.n),npcCrowd.pages.map(p=>p.n)],sprI:n=>sprInfo(n),groundH,roomOK,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
 window.__oc={spotList:()=>spotList(),stepOK:(x,z)=>stepOK(x,z),dbgBlock:(x,z,m)=>{ const out=[]; for(const k of ['shared',MODE]){ const l=BSETS[k].grid.get(Math.floor(x/GC)+','+Math.floor(z/GC))||[]; for(const b of l) if(inR(b,x,z,m||.35)) out.push(k+':'+b.kind+' '+[b.x0,b.z0,b.x1,b.z1].map(v=>v.toFixed(1)).join(',')); } return out.join(' | ')+' walk='+walkable(x,z)+' g='+groundH(x,z).toFixed(2)+' water='+waterAt(x,z,.6); },P,dbg:{renderer,M,sun,camera,scene},ROOMS,walkable,groundH,walkFloor:(L,x,z)=>walkFloor(L,x,z),spots:()=>curSpots,enterRoom,sim:(n,dt,k)=>{ Object.assign(keys,k||{}); for(let i=0;i<n;i++) updatePlayer(dt||.05); for(const q in k||{}) keys[q]=false; },setMode,teleport:id=>{ const s=curSpots.find(q=>q.id===id); if(s) teleport(s); },start:()=>$('goBtn').click(),TEN,get MODE(){ return MODE; }};
 /* スマホでGPUのメモリが足りずに描画が止まったとき: 黒い画面のままにせず、画質「軽」にして読み直す */
 renderer.domElement.addEventListener('webglcontextlost',e=>{ e.preventDefault(); try{ localStorage.setItem('oc-az-q','low'); }catch(_){}
