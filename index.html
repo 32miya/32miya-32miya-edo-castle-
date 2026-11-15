@@ -1605,6 +1605,10 @@ addMatLater('roofCu',()=>std({map:tRoof,bumpMap:tRoof,bumpScale:.5,roughness:.5,
   tDobei.needsUpdate=true; }
 /* 本丸御殿の外壁（白い漆喰と黒い腰板・柱） */
 addMatLater('kmGotenW',()=>{ const c=makeCanvas(256,256),g=c.getContext('2d'); g.fillStyle='#ece8de'; g.fillRect(0,0,256,256); mottleTex(g,256,256,40,['#e2ddd0','#f3f0e8'],.4); g.fillStyle='#2a2119'; g.fillRect(0,190,256,66); for(let x=0;x<256;x+=32){ g.fillStyle='#3a2b1f'; g.fillRect(x,0,8,256); } return std({map:toTex(c),roughness:.85}); });
+/* 青海波を打ち出した銅張りの破風（寛永の天守の千鳥破風） */
+addMatLater('seigaiha',()=>{ const c=makeCanvas(256,256),g=c.getContext('2d'); g.fillStyle='#5f857a'; g.fillRect(0,0,256,256); const R=16;
+  for(let row=0;row<=256/R*2+2;row++){ const y=row*R/2,off=(row%2)*R; for(let x=-R*2;x<256+R*2;x+=R*2) for(let k=0;k<4;k++){ g.beginPath(); g.arc(x+off,y,R-k*4,Math.PI,0); g.fillStyle=k%2?'#86ab9e':'#5a7f73'; g.fill(); g.strokeStyle='rgba(30,50,45,.55)'; g.lineWidth=1.4; g.stroke(); } }
+  const t=toTex(c); t.repeat&&t.repeat.set(2,2); return std({map:t,bumpMap:t,bumpScale:.4,roughness:.5,metalness:.35,side:THREE.DoubleSide}); });
 /* 御影石（現代の天守台。万治元年（1658）に前田家が瀬戸内の花崗岩で築いた） */
 addMatLater('mikage',()=>std({map:tStone,bumpMap:tStoneH,bumpScale:1.2,roughness:.88,color:0xeeece6,side:THREE.DoubleSide}));
 /* 現代の展示施設の内装: 白い壁 */
@@ -2014,7 +2018,7 @@ function paintHill(P,edo){
 PM.R(-1200,-1200,1200,1200,'#77756f'); PM.mot(-560,-560,560,560,['#77756f','#85837c','#6f6d68'],5000,5);
 paintHill(PM,false);
 /* 本丸の大芝生（本丸御殿の跡）と園路 */ PM.R(-40,-140,46,70,'#5f7440'); PM.mot(-40,-140,46,70,LAWN,1400,3); for(const [x0,z0,x1,z1] of [[-78,-150,58,-142],[-78,72,58,80],[-46,-142,-38,72],[46,-142,54,72],[-30,-100,60,-92]]) PM.R(x0,z0,x1,z1,'#b7ab90');
-PM.R(-78,80,-40,108,'#56693a'); PM.mot(-78,80,-40,108,FOREST,120,3); /* 富士見櫓の下の林 */
+PM.R(24,84,58,108,'#56693a'); PM.mot(24,84,58,108,FOREST,90,3); /* 富士見櫓の下の林 */
 PM.R(10,-210,58,-150,'#4f6334'); PM.mot(10,-210,58,-150,FOREST,240,3); /* 書陵部と北の林 */
 /* 二の丸庭園（池）・雑木林・芝生 */ PM.R(60,-212,200,70,'#5b6f3a'); PM.mot(60,-212,200,70,LAWN.concat(FOREST),2200,3); PM.ell(128,-40,18,11,'#3d5a52'); PM.ell(122,-48,8,6,'#3d5a52'); PM.R(84,-120,196,-112,'#b7ab90'); PM.R(140,-212,148,62,'#b7ab90');
 /* 中之門・百人番所の段と三の丸（大手門から入る園路） */ PM.R(60,70,200,150,'#b6aa8f'); PM.R(200,-212,305,150,'#8d8a80'); PM.R(214,94,305,106,'#b6aa8f'); PM.R(200,40,305,150,'#a69c86');
@@ -2225,7 +2229,7 @@ function wallSide(par,cx,y,cz,len,H,ry,wins,kind,o){ o=o||{}; const dep=o.depth|
     if(o.shutter){ /* 鉄の狭間戸（黒漆）を外へ開いた形 */ for(const sx of [-1,1]){ const sh=mesh(new THREE.BoxGeometry(w.w/2,w.h,.06),M.lacquer,false,false); sh.position.set(w.x+sx*(w.w/2+.05)+sx*w.w*.2,w.s+w.h/2,.25+w.w*.2); sh.rotation.y=-sx*1.1; G.add(sh); } continue; }
     const n=Math.max(3,Math.round(w.w/.17)); for(let k=1;k<n;k++){ const bxp=w.x-w.w/2+k*w.w/n,t=Math.abs(bxp-w.x)/(w.w/2); let top=w.s+w.h; if(kind==='kato') top=w.s+w.h*.6+w.h*.4*Math.max(0,1-Math.pow(t,.8))*.98; const bar=mesh(new THREE.BoxGeometry(.045,top-w.s,.06),o.bar||M.darkwood,false,false); bar.position.set(bxp,(w.s+top)/2,-dep/2); G.add(bar); } }
   return G; }
-/* ================= 天守（寛永度天守）: 外観5重・内部5階地下1階（穴蔵）の層塔型の独立式天守 =================
+/* ================= 天守（寛永度天守）: 外観5重・内部5階地下1階（穴蔵）の層塔型の独立式天守。入母屋は最上階だけ、銅張り（青海波）の千鳥破風12、各階に銅板張りの突上窓 =================
    ・事実: 3代将軍徳川家光が寛永15年（1638）に、元和の天守台（いまの天守台の位置）に建てた。金の鯱をのせた5重の天守で、
      屋根は銅瓦葺、壁は黒い（黒漆塗りの板壁、または銅板張りといわれる）。建地割図では天守の高さ約45m、天守台約14m、地上から約58m。
      明暦3年（1657）1月19日、明暦の大火で焼失し、翌年に前田綱紀の普請で天守台（いまの天守台、高さ約11m）が築き直されたが、天守は再建されなかった。
@@ -2241,7 +2245,7 @@ function shachi3D(par,x,y,z,s,ry,mat){ const g=new THREE.Group(); g.position.set
   const f=mesh(new THREE.BoxGeometry(.05,.5,.6),mm); f.position.set(0,1.5,-.25); f.rotation.x=.6; g.add(f);
   if(mat===M.gold) for(const sx of [-1,1]){ const fin=mesh(new THREE.BoxGeometry(.04,.32,.36),mm); fin.position.set(sx*.3,.55,.1); fin.rotation.z=sx*.5; g.add(fin); }
   par.add(g); }
-/* 天守の壁1面: 黒い壁。窓・戸口の穴あき（ローカル+zが外側）。窓には外へ開いた銅の戸（観音開き）と格子 */
+/* 天守の壁1面: 黒い壁。窓・戸口の穴あき（ローカル+zが外側）。窓には格子と、銅板張りの突上戸 */
 function kmSide(par,cx,y,cz,len,H,ry,wins,o){ o=o||{}; const dep=o.depth||.32,G=new THREE.Group(); G.position.set(cx,y,cz); G.rotation.y=ry; par.add(G);
   const s=new THREE.Shape(); s.moveTo(-len/2,0); s.lineTo(len/2,0); s.lineTo(len/2,H); s.lineTo(-len/2,H); s.lineTo(-len/2,0);
   for(const w of wins) s.holes.push(rectPath2(new THREE.Path(),w.x,w.s,w.w,w.h));
@@ -2250,7 +2254,7 @@ function kmSide(par,cx,y,cz,len,H,ry,wins,o){ o=o||{}; const dep=o.depth||.32,G=
   G.add(mesh(g,o.wall||M.kmW,true,true));
   for(const w of wins){ if(w.door) continue;
     for(const [w2,h2,xx,yy] of [[w.w+.26,.12,w.x,w.s-.06],[w.w+.26,.12,w.x,w.s+w.h+.06],[.12,w.h,w.x-w.w/2-.07,w.s+w.h/2],[.12,w.h,w.x+w.w/2+.07,w.s+w.h/2]]){ const b=mesh(new THREE.BoxGeometry(w2,h2,.08),M.black,false,false); b.position.set(xx,yy,.03); G.add(b); }
-    if(!o.noShutter){ /* 銅の窓戸（観音開き）を外へ開いた形 */ for(const sx of [-1,1]){ const sh=mesh(new THREE.BoxGeometry(w.w/2,w.h,.05),M.roofCu||M.black,false,false); sh.position.set(w.x+sx*(w.w/2+.02)+sx*Math.cos(1.1)*w.w/4,w.s+w.h/2,.06+Math.sin(1.1)*w.w/4); sh.rotation.y=-sx*1.1; G.add(sh); } }
+    if(!o.noShutter){ /* 銅板張りの突上戸（上を軸に外へ突き上げて開く） */ const a=.85,hh=w.h*.95,sh=mesh(new THREE.BoxGeometry(w.w+.1,hh,.05),M.roofCu||M.black,false,false); sh.position.set(w.x,w.s+w.h+.06-Math.cos(a)*hh/2,.06+Math.sin(a)*hh/2); sh.rotation.x=-a; G.add(sh); const st=mesh(new THREE.BoxGeometry(.04,.04,Math.sin(a)*hh*.9),M.darkwood,false,false); st.position.set(w.x+w.w*.35,w.s+.1,.06+Math.sin(a)*hh*.45); G.add(st); }
     const n=Math.max(3,Math.round(w.w/.2)); for(let k=1;k<n;k++){ const bar=mesh(new THREE.BoxGeometry(.05,w.h,.06),M.darkwood,false,false); bar.position.set(w.x-w.w/2+k*w.w/n,w.s+w.h/2,-dep/2); G.add(bar); } }
   return G; }
 /* 天守台の石垣: 下はゆるく上はほぼまっすぐな勾配（切込接ぎ・打込接ぎ）。door={f,x0,x1,y1}: 入口の穴 */
@@ -2300,7 +2304,7 @@ const TFL=[
   {lv:2,name:'天守 3階',kana:'てんしゅ さんがい',light:.72},{lv:3,name:'天守 4階',kana:'てんしゅ よんかい',light:.76},{lv:4,name:'天守 5階（最上階）',kana:'てんしゅ ごかい',light:.95}];
 const TFL_TXT={
  edo:['天守台の中の地階（穴蔵）。小天守台の枡形から、天守台の石垣にあけた口をくぐって入ります。石垣に囲まれた薄暗い板敷きで、太い柱が並び、兵糧の米俵・塩・水の樽や武具を納めたと考えられます（中のようすは想像）。東の大きな階段を上ると1階です。',
-  '1階。初重は名古屋城の天守をしのぐ大きさだったと考えられ、太い柱が林のように立つ板の間です。黒い壁の窓には銅の戸と格子がはまります。平時の天守は将軍の住まいではなく、武具や貴重な品を納める蔵として使われたといわれます（間取りは想像）。',
+  '1階。初重は名古屋城の天守をしのぐ大きさだったと考えられ、太い柱が林のように立つ板の間です。黒い壁の窓には格子がはまり、外側に銅板張りの突上戸がつきます。平時の天守は将軍の住まいではなく、武具や貴重な品を納める蔵として使われたといわれます（間取りは想像）。',
   '2階。武具を並べた板の間（想像）。明暦の大火では、この二重目の銅の窓戸が開いていて、そこから火の粉が入って天守が燃えたという言い伝えがあります。',
   '3階。窓から本丸御殿の大きな屋根の連なりと、東の二の丸・三の丸が見下ろせます。',
   '4階。城下の大名屋敷の甍の向こうに、江戸の町と江戸湊（いまの東京湾）が広がります。',
@@ -2318,9 +2322,9 @@ function planKeep(era){ const cx=TA.cx,cz=TA.cz,FL=[],ST=[],g0=TZ.g0,ti=(TZ.bw/2
 /* 外観（江戸時代だけ。現代は天守台だけが残る。明暦の大火の場面では焼け落ちる） */
 B=BS; curSet=BSETS.shared;
 const KX=new THREE.Group(); GE.add(KX);
-const TMATS={roof:M.roofCu,gable:M.lacqK,gold:false,orn:true,trim:M.gold,crest:M.aoiDisc,shs:1.3};
+const TMATS={roof:M.roofCu,gable:M.seigaiha,gold:false,orn:true,trim:M.roofCu,crest:M.aoiDisc,shs:1.3};
 SHACHI_GOLD=true;
-const KT=kmTower(KX,TA.cx,TA.y0,TA.cz,TLV,{roof:M.roofCu,gable:M.lacqK,topGold:true,crest:M.aoiDisc,shs:1.35,oh:TA.oh,eave:M.black,nageshi:M.black});
+const KT=kmTower(KX,TA.cx,TA.y0,TA.cz,TLV,{roof:M.roofCu,gable:M.seigaiha,topGold:true,crest:M.aoiDisc,shs:1.35,oh:TA.oh,eave:M.black,nageshi:M.black});
 SHACHI_GOLD=false;
 const TP=planKeep('edo'); TEN.edo=Object.assign({par:GE},TP); TEN.modern=Object.assign({par:GM},TP,{none:true});
 { const cx=TA.cx,cz=TA.cz,g0=TZ.g0,bh=TZ.bh,T=TLV,a=TZ.bw/2-TZ.bat,b=TZ.bd/2-TZ.bat;
@@ -2332,14 +2336,14 @@ const TP=planKeep('edo'); TEN.edo=Object.assign({par:GE},TP); TEN.modern=Object.
   curSet=BSETS.edo; block(cx-TZ.bw/2+.4,cz-TZ.bd/2+.4,cx+TZ.bw/2-.4,cz+TZ.bd/2-.6,'castle'); curSet=BSETS.shared;
   { curSet=BSETS.modern; for(const [x0,x1,z0,z1] of [[cx-TZ.bw/2,cx-a+.6,cz-TZ.bd/2,cz+TZ.bd/2],[cx+a-.6,cx+TZ.bw/2,cz-TZ.bd/2,cz+TZ.bd/2],[cx-TZ.bw/2,cx+TZ.bw/2,cz-TZ.bd/2,cz-b+.6]]) block(x0,z0,x1,z1,'castle');
     block(cx-TZ.bw/2,cz+b-.6,cx-5.4,cz+TZ.bd/2,'castle'); block(cx+5.4,cz+b-.6,cx+TZ.bw/2,cz+TZ.bd/2,'castle'); curSet=BSETS.shared; }
-  /* 破風: 1重目の東西に大きな千鳥破風、2重目の南北に唐破風、3重目の南北と4重目の東西に千鳥破風（「江戸図屏風」などを手がかりにした想像）。破風板は黒漆に金の飾り金具 */
+  /* 破風: 寛永の天守は入母屋が最上階だけで、青海波の文様を打ち出した銅張りの千鳥破風が12あった（唐破風はない）。
+     12の配り方は、1重目と2重目の四方に1つずつ、3重目の南北、4重目の東西（建地割図・正徳の天守絵図などを手がかりにした想像） */
   const mats=TMATS;
   { const r0=T[0],r1=T[1],r2=T[2],r3=T[3];
-    for(const s of [-1,1]){ chidori(KX,cx+s*(r0.P[1][0]+TA.oh*.5),r0.Y+r0.h+r0.rise*.22,cz,s>0?Math.PI/2:-Math.PI/2,9.4,3.2,mats);
-      karahafu(KX,cx,r1.Y+r1.h-.25+r1.rise*.12,cz+s*(r1.P[0][1]+TA.oh*.7),s>0?0:Math.PI,6.4,mats);
-      chidori(KX,cx,r2.Y+r2.h+r2.rise*.2,cz+s*(r2.P[0][1]+TA.oh*.45),s>0?0:Math.PI,6.2,2.5,mats);
-      chidori(KX,cx+s*(r3.P[1][0]+TA.oh*.45),r3.Y+r3.h+r3.rise*.2,cz,s>0?Math.PI/2:-Math.PI/2,5.0,2.1,mats); }
-    /* 破風の金の三つ葉葵 */ for(const s of [-1,1]){ const k=mesh(new THREE.CircleGeometry(.75,24),M.aoiG); k.position.set(cx+s*(r0.P[1][0]+TA.oh*.5+1.78),r0.Y+r0.h+r0.rise*.22+2.0,cz); k.rotation.y=s*Math.PI/2; KX.add(k); } }
+    const ch=(L,face,W,H,k)=>{ const ns=face==='n'||face==='s',s=face==='s'||face==='e'?1:-1,off=(ns?L.P[0][1]:L.P[1][0])+TA.oh*k,y=L.Y+L.h+L.rise*.2;
+      if(ns) chidori(KX,cx,y,cz+s*off,s>0?0:Math.PI,W,H,mats); else chidori(KX,cx+s*off,y,cz,s>0?Math.PI/2:-Math.PI/2,W,H,mats); };
+    for(const f of ['n','s','e','w']){ ch(r0,f,f==='e'||f==='w'?9.4:8.6,3.2,.5); ch(r1,f,f==='e'||f==='w'?7.2:6.6,2.7,.45); }
+    for(const f of ['n','s']) ch(r2,f,6.0,2.4,.45); for(const f of ['e','w']) ch(r3,f,5.0,2.1,.45); }
   /* 穴蔵の入口の上の庇と門柱 */ { const z=cz+TZ.bd/2+.05; for(const s of [-1,1]){ const p=mesh(new THREE.BoxGeometry(.4,3.7,.4),M.darkwood); p.position.set(cx+s*1.65,g0+1.85,z+.2); KX.add(p); }
     const l=mesh(new THREE.BoxGeometry(4,.35,.5),M.darkwood); l.position.set(cx,g0+3.75,z+.2); KX.add(l); const r=mesh(gableRoofGeo(4.8,1.8,.6,.3,.2),M.roof); r.position.set(cx,g0+3.95,z+.5); KX.add(r); }
   /* 小天守台の枡形（江戸時代）: 石垣と土塀で囲み、東に門。現代は天守台へ上る坂と、その両わきの石垣 */
@@ -2408,8 +2412,8 @@ const KMM={wall:'wallW',roof:'roof',gable:'plaster'};
 function kmTamon(x0,x1,z0,z1,h,y,par){ tamon(null,x0,x1,z0,z1,h,y,KMM); block(x0-.3,z0-.3,x1+.3,z1+.3,'castle'); }
 /* 橋（木の橋）。西の丸大手橋は江戸時代だけ（現代は正門石橋） */
 for(const b of BRIDGES){ if(b.mode==='modern') continue; const old=B; if(b.mode==='edo'){ B=BE; woodBridge(b,{batch:BE}); } else woodBridge(b,{giboshi:b.id==='nihonbashi'}); B=old; }
-/* 富士見櫓（三重櫓）: 本丸の南の隅。明暦の大火のあと万治2年（1659）に再建され、天守の代わりとされた。どこから見ても同じ形に見えることから「八方正面の櫓」とも */
-const FUJIMI={cx:-62,cz:96};
+/* 富士見櫓（三重櫓）: 本丸の東南の隅。明暦の大火のあと万治2年（1659）に再建され、天守の代わりとされた。どこから見ても同じ形に見えることから「八方正面の櫓」とも */
+const FUJIMI={cx:49,cz:99};
 kmTower(scene,FUJIMI.cx,PL.honmaru.H+1.4,FUJIMI.cz,[{P:poly8(6.4,6.4,.2),h:5.2,slope:.5,wins:[[1.4,1.1,1.1,2.7]]},{P:poly8(4.9,4.9,.2),h:4.2,slope:.54,wins:[[1.2,1,1,2.4]]},{P:poly8(3.6,3.6,.2),h:4.0,wins:[[1.1,1,1,2.2]]}],{wall:M.wallW,noShutter:true,ishi:true,shs:.8,oh:1.6});
 box(BS.stone,FUJIMI.cx-7.4,FUJIMI.cx+7.4,PL.honmaru.H,PL.honmaru.H+1.4,FUJIMI.cz-7.4,FUJIMI.cz+7.4); block(FUJIMI.cx-7.6,FUJIMI.cz-7.6,FUJIMI.cx+7.6,FUJIMI.cz+7.6,'castle');
 /* 富士見多聞（本丸の西のふちの多聞櫓。現代は中を公開） */
@@ -2501,7 +2505,7 @@ yaguraMon(86,100,6,Math.PI/2,{y:PL.shimo.H+6.5,len:34,dep:8,ph:0,h2:4,par:GE,wal
 { const y=PL.shimo.H; BE.darkwood.add(new THREE.BoxGeometry(.6,6.5,.6),TM(86,y+3.25,96.4)); BE.darkwood.add(new THREE.BoxGeometry(.6,6.5,.6),TM(86,y+3.25,103.6)); BE.darkwood.add(new THREE.BoxGeometry(8.2,.6,8),TM(86,y+6.2,100)); }
 yaguraMon(200.5,100,6,Math.PI/2,{y:PL.shimo.H,len:22,dep:6,ph:4,h2:3.4,par:GE,wall:'wallW'});
 /* 本丸の櫓と多聞（江戸城の本丸は石垣の上を櫓と多聞櫓がめぐっていた） */
-for(const [x,z,w,d] of [[54,104,8,8],[-72,-205,8,8],[54,-130,8,7],[54,-60,8,7],[54,24,8,7]]) yagura(x,z,w,d,0,{y:PL.honmaru.H,par:GE,wall:'wallW',h1:4.2,h2:3.4});
+for(const [x,z,w,d] of [[-70,100,8,8],[-72,-205,8,8],[54,-130,8,7],[54,-60,8,7],[54,24,8,7]]) yagura(x,z,w,d,0,{y:PL.honmaru.H,par:GE,wall:'wallW',h1:4.2,h2:3.4});
 kmTamon(-80,-75,-140,-60,3.4,PL.honmaru.H); kmTamon(-80,-75,10,80,3.4,PL.honmaru.H); kmTamon(-48,40,105,110,3.4,PL.honmaru.H);
 /* 二の丸の櫓と、三の丸・西の丸の櫓 */
 for(const [x,z,y] of [[194,-206,PL.nino.H],[194,64,PL.nino.H],[300,-206,PL.sanno.H],[300,144,PL.sanno.H],[-130,-34,PL.nishi.H],[-130,60,PL.nishi.H]]) yagura(x,z,8,7,0,{y,par:GE,wall:'wallW',h1:4,h2:3.2});
@@ -2549,7 +2553,7 @@ function zoneCeil(R,x0,x1,z0,z1,mat,cof){ if(cof){ const nx=Math.max(2,Math.roun
   rb(R,mat||'woodGrain',x0,x1,R.h,R.h+.12,z0,z1,false); }
 function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8); R.steps=R.steps||[]; R.steps.push({x0:R.ox+x0,x1:R.ox+x1,z0:R.oz+z0,z1:R.oz+z1,h:hh||.4}); rb(R,'lacquer',x0-.04,x1+.04,(hh||.4)-.06,(hh||.4)+.02,z1-.06,z1+.04); }
 { const w=72,d=150,h=4.4,dx=24;
-  const R=RD.goten=mkRoom(Object.assign({era:'edo'},doorAt(GOT.door[0],GOT.door[1],0,1),roomTxt('本丸御殿','ほんまるごてん','将軍の住まいであり、幕府の政治の中心だった御殿。南から、儀式や大名との対面の「表」、将軍が日常を過ごし政務をとる「中奥」、御台所（将軍の正室）や側室・奥女中が暮らす「大奥」に分かれていました。表の大広間は約500畳、松之大廊下は約50mあったといわれ、狩野探幽らの金碧障壁画で飾られていました。中奥と大奥は銅の塀で仕切られ、御鈴廊下の御錠口だけでつながります（距離と部屋の数は縮め、間取りは後の時代の絵図をもとにした想像を交えています）。',[['完成','寛永17年（1640）（寛永16年の火事のあと再建）'],['構成','表・中奥・大奥'],['大奥','御殿向・長局向・広敷向'],['焼失','明暦3年（1657）明暦の大火']])));
+  const R=RD.goten=mkRoom(Object.assign({era:'edo'},doorAt(GOT.door[0],GOT.door[1],0,1),roomTxt('本丸御殿','ほんまるごてん','将軍の住まいであり、幕府の政治の中心だった御殿。南から、儀式や大名との対面の「表」、将軍が日常を過ごし政務をとる「中奥」、御台所（将軍の正室）や側室・奥女中が暮らす「大奥」に分かれていました。表の大広間は約400畳、松之大廊下は約50mあったといわれ、狩野探幽らの金碧障壁画で飾られていました。中奥と大奥は銅の塀で仕切られ、御鈴廊下の御錠口だけでつながります（距離と部屋の数は縮め、間取りは後の時代の絵図をもとにした想像を交えています）。',[['完成','寛永17年（1640）（寛永16年の火事のあと再建）'],['構成','表・中奥・大奥'],['大奥','御殿向・長局向・広敷向'],['焼失','明暦3年（1657）明暦の大火']])));
   R.w=w; R.d=d; R.h=h; R.light=1.05;
   /* 外壁・床下地 */ rb(R,'darkwood',-w/2,w/2,-.25,-.06,-d/2,d/2); rb(R,'plIn',-w/2-.2,w/2+.2,0,h,-d/2-.2,-d/2); rb(R,'plIn',-w/2-.2,-w/2,0,h,-d/2,d/2); rb(R,'plIn',w/2,w/2+.2,0,h,-d/2,-37.5); rb(R,'plIn',w/2,w/2+.2,0,h,-34.5,d/2); rb(R,'darkwood',w/2,w/2+.2,2.9,h,-37.5,-34.5); for(const zz of [-37.5,-34.5]) rb(R,'darkwood',w/2-.2,w/2+.2,0,2.9,zz-.12,zz+.12,true);
   const dw=3.2,dh=3.0; rb(R,'darkwood',-w/2-.2,dx-dw/2,0,h,d/2,d/2+.2); rb(R,'darkwood',dx+dw/2,w/2+.2,0,h,d/2,d/2+.2); rb(R,'darkwood',dx-dw/2,dx+dw/2,dh,h,d/2,d/2+.2); rb(R,'shoji',-w/2,dx-dw/2,.6,2.8,d/2-.02,d/2); rb(R,'shoji',dx+dw/2,w/2,.6,2.8,d/2-.02,d/2);
@@ -2557,11 +2561,11 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   R.exitZone={x0:R.ox+dx-dw/2+.1,x1:R.ox+dx+dw/2-.1,z0:R.oz+d/2-.6,z1:R.oz+d/2+1}; R.spawn=[R.ox+dx,R.oz+d/2-3,0];
   const Z=[]; const zn=(x0,x1,z0,z1,name)=>Z.push([x0,x1,name,z0,z1]);
   /* ---------- 表 ---------- */
-  /* 玄関（式台）と遠侍（登城した大名・旗本の控えの間。襖に竹虎の絵があり「虎之間」とも） */
-  zoneFloor(R,12,36,68,75,'woodGrain',0,3); zoneFloor(R,12,36,30,68,'tatami'); zn(12,36,68,75,'本丸御殿 玄関（式台）'); zn(12,36,30,68,'表 遠侍（虎之間）');
+  /* 玄関（式台）と遠侍（将軍の警備にあたる御徒の詰所）、その奥の虎之間（本丸を警備する書院番の詰所。襖に竹虎の絵） */
+  zoneFloor(R,12,36,68,75,'woodGrain',0,3); zoneFloor(R,12,36,30,68,'tatami'); zn(12,36,68,75,'本丸御殿 玄関（式台）'); zn(12,36,48,68,'表 遠侍（御徒の詰所）'); zn(12,36,30,48,'表 虎之間（書院番の詰所）'); pw(R,'x',12,36,48,['tora'],[[21,27]],{step:2.4});
   pw(R,'x',12,36,68,'woodGrain',[[20,28]],{y1:2.9}); pw(R,'z',30,75,12,['tora'],[[54,60]],{step:2.4}); fusumaWallR(R,12.2,35.8,30.2,67.8,['tora'],{noFront:true});
   zoneCeil(R,12,36,30,75,'woodGrain');
-  /* 大広間（約500畳。儀式や大名の年始の拝謁に使った。上段・中段・下段と二之間・三之間） */
+  /* 大広間（約400畳。儀式や大名の年始の拝謁に使った。上段・中段・下段と二之間・三之間） */
   zoneFloor(R,-36,12,30,75,'tatami'); jodan(R,-36,-26,30,52,.42); rb(R,'tatami',-26,-14,0,.2,30,52,false,1.8); R.steps.push({x0:R.ox-26,x1:R.ox-14,z0:R.oz+30,z1:R.oz+52,h:.2});
   zn(-36,-26,30,52,'表 大広間（上段之間）'); zn(-26,-14,30,52,'表 大広間（中段之間）'); zn(-14,12,30,52,'表 大広間（下段之間）'); zn(-36,-12,52,75,'表 大広間（二之間）'); zn(-12,12,52,75,'表 大広間（三之間）');
   pw(R,'x',-36,12,52,['kmMatsuL','kmMatsuR'],[[-30,-20],[-6,4]],{step:2.2}); pw(R,'z',52,75,-12,['tl_f_matsu'],[[60,66]]);
@@ -2697,8 +2701,8 @@ const SPOTS=[
   {id:'tenshu',name:'天守台',kana:'てんしゅだい',at:[-50,-185],pos:[-30,-141],look:[-50,24,-185],q:'Edo castle tenshudai',
    text:'江戸城の天守が建っていた石垣の台。いまの天守台は、明暦3年（1657）の大火で寛永の天守が焼けた翌年、加賀藩の前田綱紀が瀬戸内の御影石（花崗岩）で築き直したもので、東西約41m・南北約45m・高さ約11m。天守は再建されず、石垣だけが残りました。南の小天守台の坂から上に登れます。',
    meta:[['築造','万治元年（1658）・前田綱紀'],['大きさ','東西約41m・南北約45m・高さ約11m'],['天守','明暦の大火で焼失、再建されず']],
-   edo:{name:'天守（寛永度天守）',pos:[-30,-146],text:'寛永15年（1638）に3代将軍家光が建てた、江戸城3代目の天守。外観5重・内部5階地下1階、金の鯱をのせ、屋根は銅瓦、壁は黒。建地割図では天守台をふくめて地上約58mあり、日本の天守でいちばん高かったと考えられます。わずか20年後の明暦の大火で焼け落ちました。入口は南の小天守台の枡形から、天守台の石垣の口をくぐった地階（穴蔵）です（内部の間取りは想像）。',
-     meta:[['完成','寛永15年（1638）'],['形式','独立式・層塔型 5重5階地下1階'],['高さ','天守約45m＋天守台約14m（建地割図）'],['焼失','明暦3年（1657）1月19日']]}},
+   edo:{name:'天守（寛永度天守）',pos:[-30,-146],text:'寛永15年（1638）に3代将軍家光が建てた、江戸城3代目の天守。外観5重・内部5階地下1階、金の鯱をのせ、瓦はすべて銅瓦、壁は黒。入母屋は最上階だけで、青海波の文様を打ち出した銅張りの千鳥破風が12あり、各階の窓には銅板張りの突上戸がつきました。建地割図では天守台をふくめて地上約58mあり、日本の天守でいちばん高かったと考えられます。わずか20年後の明暦の大火で焼け落ちました。入口は南の小天守台の枡形から、天守台の石垣の口をくぐった地階（穴蔵）です（内部の間取りは想像）。',
+     meta:[['完成','寛永15年（1638）'],['形式','独立式・層塔型 5重5階地下1階'],['破風','銅張り（青海波）の千鳥破風12'],['高さ','天守約45m＋天守台約14m（建地割図）'],['焼失','明暦3年（1657）1月19日']]}},
   {id:'kotenshu',name:'小天守台',kana:'こてんしゅだい',at:[-50,-158],pos:[-50,-140],look:[-50,22,-170],q:'Edo castle kotenshudai slope',
    text:'天守台の南に張り出した一段低い石垣の台。いまは天守台の上へ登る坂になっています。',meta:[['いま','天守台へ上る坂']],
    edo:{pos:[-30,-158],text:'天守台の南の小天守台は、石垣と土塀で囲んだ枡形になっていて、東の門をくぐると正面が天守の入口（天守台の石垣の口）です。寛永の天守は小天守を持たない「独立式」でした。',meta:[['形式','枡形（門と土塀）'],['入口','天守の地階（穴蔵）へ']]}},
@@ -2710,14 +2714,14 @@ const SPOTS=[
    edo:{name:'大奥',pos:[52,-48],look:[40,19,-60],text:'中奥と銅の塀で仕切られた大奥。将軍の寝所の御小座敷、御台所の御座所や御仏間のある「御殿向」、奥女中の住まいの「長局向」、男の役人が詰める「広敷向」に分かれていました。寛永のころは3代家光の乳母・春日局が大奥を取り仕切ったといわれます。すぐ西の「広敷御門」から広敷に入り、広敷の御錠口を通って中を歩けます。本丸御殿の玄関から表・中奥を抜け、御鈴廊下を通って入ることもできます（間取りは後の時代の絵図をもとにした想像）。',meta:[['区画','御殿向・長局向・広敷向'],['入口','広敷御門・御鈴廊下の御錠口'],['ゆかりの人','春日局（家光の乳母）']]}},
   {id:'matsu',name:'松の大廊下跡',kana:'まつのおおろうかあと',at:[-36,32],pos:[-36,38],look:[-36,17,30],q:'Matsu no Oroka Edo castle',modernOnly:true,
    text:'本丸御殿の大広間と白書院を結んだ長さ約50mの廊下の跡に、石碑が立ちます。襖に浜辺の松と千鳥が描かれていたことからこの名があり、元禄14年（1701）、赤穂藩主浅野内匠頭が吉良上野介に斬りつけた所として知られます。',meta:[['長さ','約50m（L字形）'],['事件','元禄14年（1701）松の廊下の刃傷']]},
-  {id:'fujimi',name:'富士見櫓',kana:'ふじみやぐら',at:[-62,96],pos:[-38,92],look:[-62,26,96],q:'Fujimi-yagura Edo castle',
-   text:'本丸の南の隅に建つ三重櫓。明暦の大火で天守が焼けたあとは、天守の代わりとされました。どこから見ても同じ形に見えることから「八方正面の櫓」とも呼ばれ、かつてはここから富士山や品川の海が見えたといいます。',meta:[['形式','三重櫓'],['再建','万治2年（1659）'],['別名','八方正面の櫓']],
-   edo:{text:'本丸の南の隅の三重櫓。名のとおり、ここから西に富士山が望めました（明暦の大火で焼け、万治2年（1659）に再建されたのがいまの櫓）。'}},
+  {id:'fujimi',name:'富士見櫓',kana:'ふじみやぐら',at:[49,99],pos:[28,94],look:[49,26,99],q:'Fujimi-yagura Edo castle',
+   text:'本丸の東南の隅に建つ三重櫓。明暦の大火で天守が焼けたあとは、天守の代わりとされました。どこから見ても同じ形に見えることから「八方正面の櫓」とも呼ばれ、かつてはここから富士山や品川の海が見えたといいます。',meta:[['形式','三重櫓'],['再建','万治2年（1659）'],['別名','八方正面の櫓']],
+   edo:{text:'本丸の東南の隅の三重櫓。名のとおり、ここから西に富士山が望めました（明暦の大火で焼け、万治2年（1659）に再建されたのがいまの櫓）。'}},
   {id:'tamon',name:'富士見多聞',kana:'ふじみたもん',at:[-77,-17],pos:[-70,-17],look:[-77,18,-17],q:'Fujimi tamon Edo castle',
    text:'蓮池濠に面した本丸の石垣の上の多聞櫓。いまは中を見学できます（入口は東側）。',meta:[['形式','多聞櫓'],['いま','内部を公開']],
    edo:{text:'本丸の西のふちを守る多聞櫓。江戸時代の本丸は、石垣の上をこのような櫓と多聞・土塀がぐるりとめぐっていました。'}},
   {id:'ishimuro',name:'石室',kana:'いしむろ',at:[-70,-52],pos:[-70,-40],look:[-70,17,-52],q:'Ishimuro Edo castle',
-   text:'伊豆石を積んだ石の蔵。大奥の調度品を納めた蔵とも、火事のときに貴重品を避難させる蔵ともいわれ、用途ははっきりしていません。',meta:[['石','伊豆石'],['用途','諸説あり']]},
+   text:'伊豆半島から船で運んだ伊豆石（安山岩）を積んだ石の蔵。大奥の調度品や文書を納めた「富士見御宝蔵」と推測されていますが、はっきりはしていません。',meta:[['石','伊豆石（安山岩）'],['用途','富士見御宝蔵と推測']]},
   {id:'shiomi',name:'汐見坂',kana:'しおみざか',at:[72,-97],pos:[52,-97],look:[84,8,-97],q:'Shiomizaka Edo castle',
    text:'本丸と二の丸を結ぶ坂。かつてはここから日比谷の入江の海が見えたことからこの名があります。坂の上には汐見坂門がありました。',meta:[['結ぶ所','本丸と二の丸'],['名の由来','海（汐）が見えた']],
    edo:{text:'本丸から二の丸へ下る坂。坂の上に汐見坂門の櫓門が構えます。'}},
@@ -2783,7 +2787,7 @@ function areaAt(x,z){ const e=MODE==='edo';
   const wn=waterName(x,z,0); if(wn) return wn+'のほとり';
   const r=rampAt(x,z); if(r) return r.name;
   const p=platAt(x,z);
-  if(p){ if(p.id==='honmaru'){ if(inR(KOT,x,z,.5)) return e?'小天守台の枡形':'小天守台'; if(Math.hypot(x-TA.cx,z-TA.cz)<30) return '天守台のまわり'; if(x<-60&&z>80) return '富士見櫓の下';
+  if(p){ if(p.id==='honmaru'){ if(inR(KOT,x,z,.5)) return e?'小天守台の枡形':'小天守台'; if(Math.hypot(x-TA.cx,z-TA.cz)<30) return '天守台のまわり'; if(x>30&&z>84) return '富士見櫓の下';
       if(e){ if(z<-56) return '本丸（大奥の外）'; return '本丸（御殿のまわり）'; } return z<-60?'本丸（大奥の跡）':'本丸（大芝生）'; }
     if(p.id==='shimo') return x<96?'中之門・大番所':x>176?'大手三之門の内':'百人番所の前'; if(p.id==='sanno') return z>60&&x>270?'大手門の内（三の丸）':'三の丸';
     if(p.id==='nino'||p.id==='nino2') return e?'二の丸':'二の丸（庭園）'; return p.name; }
@@ -2867,7 +2871,7 @@ for(const [set,mode] of [[TSETS.modern,'modern'],[TSETS.edo,'edo']]){ TS=set; MO
   const fill=(x0,x1,z0,z1,n,f)=>{ for(let i=0;i<n;i++){ const x=x0+rnd()*(x1-x0),z=z0+rnd()*(z1-z0); if(!edgeOK(x,z,3.5)||!okT(x,z)) continue; f(x,z); } };
   if(!edo){
     /* 本丸: 北の林（書陵部のあたり）・富士見櫓の下の林・大芝生のまわり。梅林坂の梅 */
-    fill(8,58,-210,-150,160,(x,z)=>addRound(x,z,1.1+rnd()*.5,false,DEEP)); fill(-78,-42,78,108,60,(x,z)=>rnd()<.4?addPine(x,z,1):addRound(x,z,1.1,false,DEEP));
+    fill(8,58,-210,-150,160,(x,z)=>addRound(x,z,1.1+rnd()*.5,false,DEEP)); fill(24,58,82,108,50,(x,z)=>rnd()<.4?addPine(x,z,1):addRound(x,z,1.1,false,DEEP));
     fill(-78,58,-150,72,90,(x,z)=>{ if(x>-40&&x<46&&z>-140&&z<70) return; rnd()<.3?addBlossom(x,z,1.05,SAKURA):addRound(x,z,1+rnd()*.4,false); });
     for(let x=62;x<84;x+=4) for(const z of [-194,-176]) if(okT(x,z)) addBlossom(x,z,.85,['#f6eef0','#f3dfe6','#fbf6f2']);
     /* 二の丸の雑木林・庭のまわり */ fill(62,198,-210,68,320,(x,z)=>{ if(Math.hypot(x-128,(z+40)*1.4)<26) return; rnd()<.25?addPine(x,z,1):addRound(x,z,1+rnd()*.5,rnd()<.3); });
