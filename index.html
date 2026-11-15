@@ -2482,14 +2482,14 @@ B=BE; curSet=BSETS.edo;
 /* 本丸御殿の外観: 南から表・中奥・大奥と奥へ続く、いくつもの大屋根。玄関は南東 */
 const GOT={cx:-12,cz:-35,w:108,d:208,y:PL.honmaru.H,door:[24,71.4]}; const GOTG=new THREE.Group(); GE.add(GOTG);
 { const y=GOT.y,BG=mkB(),oB=B; B=BG;
-  const H=(cx,cz,w,d,h,o)=>goten2(cx,cz,w,d,h,Object.assign({y,par:GOTG,noBlock:true,oh:2},o||{}));
+  const H=(cx,cz,w,d,h,o)=>goten2(cx,cz,w,d,h,Object.assign({y,par:GOTG,oh:2},o||{}));
   /* 表: 遠侍・玄関（唐破風）・大広間・松之大廊下・白書院・黒書院 */ H(28,52,30,36,5.2,{kara:1}); H(-34,48,58,40,6.2); H(-6,20,100,6,3.6); H(26,0,34,30,5); H(-34,0,44,30,4.8);
   /* 中奥: 御座之間・御休息之間 */ H(-30,-36,40,26,4.6); H(16,-36,40,26,4.6);
   /* 御鈴廊下と、中奥・大奥を仕切る塀 */ H(-22,-58,6,20,3.2); for(const [a,b] of [[-66,-25],[-19,44]]) dobei(a,-56,b,-56,3,'castle',y,true);
   /* 大奥: 御殿向（御小座敷・御台所の御座所・御仏間）・長局（女中の住まい、細長い棟が並ぶ）・広敷 */ H(-38,-84,48,30,4.6); H(4,-88,30,38,5); H(-30,-120,40,24,4.2);
   for(const z of [-74,-94,-114,-134]) H(32,z,24,10,3.8); for(const x of [4,22,40]) H(x,-172,10,52,3.8); H(36,-48,16,10,3.4);
   for(const k in BG) BG[k].build(M[k],true,GOTG); B=oB;
-  block(-66,-140,44,70,'castle'); block(0,-200,46,-140,'castle'); }
+  }
 /* 大奥への通用門（七つ口）の外の塀と、長局の北の塀 */
 dobei(-2,-201,-2,-140,2.6,'castle',PL.honmaru.H,true); dobei(-2,-201,46,-201,2.6,'castle',PL.honmaru.H,true);
 /* 中雀門（本丸の正面の門）・汐見坂門・梅林坂門 */
@@ -2539,6 +2539,7 @@ B=BE;
    部屋のローカル座標（x: 東が＋, z: 南が＋）。南の玄関から入り、表（遠侍・大広間・松之大廊下・白書院・黒書院）→ 中奥（御座之間・御休息之間）
    → 御鈴廊下（御錠口）→ 大奥（御殿向・長局向・広敷向）と北へ進む。部屋の名と並びは、のちの時代の絵図（弘化・万延度の御殿の図など）をもとに縮めて再現した想像です */
 function pw(R,ax,a0,a1,c,mat,gaps,o){ o=o||{}; const H=R.h,y1=o.y1||2.9,th=o.th||.14,G=(gaps||[]).slice().sort((p,q)=>p[0]-q[0]); let segs=[],t=a0; for(const [g0,g1] of G){ if(g0>t) segs.push([t,g0]); t=Math.max(t,g1); } if(t<a1) segs.push([t,a1]);
+  (R._gaps=R._gaps||[]).push(...G.map(([g0,g1])=>({ax,c,g0,g1}))); for(const [g0,g1] of G){ if(!o.low) (ax==='x'?rb(R,'lacquer',g0,g1,0,.04,c-.07,c+.07):rb(R,'lacquer',c-.07,c+.07,0,.04,g0,g1)); }
   const put=(b0,b1,y0,yy1,m,solid)=>ax==='x'?rb(R,m,b0,b1,y0,yy1,c-th/2,c+th/2,solid):rb(R,m,c-th/2,c+th/2,y0,yy1,b0,b1,solid);
   for(const [b0,b1] of segs){ if(b1-b0<.05) continue; if(o.low){ put(b0,b1,0,o.low,o.lowMat||'darkwood',true); if(o.lattice) for(let s=b0+.18;s<b1;s+=.22) ax==='x'?rb(R,'darkwood',s-.03,s+.03,o.low,y1,c-.03,c+.03):rb(R,'darkwood',c-.03,c+.03,o.low,y1,s-.03,s+.03); }
     else { const step=o.step||1.8; for(let s=b0;s<b1-.05;s+=step){ const e=Math.min(b1,s+step); put(s+.03,e-.03,0,y1,Array.isArray(mat)?mat[((Math.round(s/step)%mat.length)+mat.length)%mat.length]:mat,false); } put(b0,b1,0,y1,'darkwood',true); } }
@@ -2550,7 +2551,7 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
 { const w=72,d=150,h=4.4,dx=24;
   const R=RD.goten=mkRoom(Object.assign({era:'edo'},doorAt(GOT.door[0],GOT.door[1],0,1),roomTxt('本丸御殿','ほんまるごてん','将軍の住まいであり、幕府の政治の中心だった御殿。南から、儀式や大名との対面の「表」、将軍が日常を過ごし政務をとる「中奥」、御台所（将軍の正室）や側室・奥女中が暮らす「大奥」に分かれていました。表の大広間は約500畳、松之大廊下は約50mあったといわれ、狩野探幽らの金碧障壁画で飾られていました。中奥と大奥は銅の塀で仕切られ、御鈴廊下の御錠口だけでつながります（距離と部屋の数は縮め、間取りは後の時代の絵図をもとにした想像を交えています）。',[['完成','寛永17年（1640）（寛永16年の火事のあと再建）'],['構成','表・中奥・大奥'],['大奥','御殿向・長局向・広敷向'],['焼失','明暦3年（1657）明暦の大火']])));
   R.w=w; R.d=d; R.h=h; R.light=1.05;
-  /* 外壁・床下地 */ rb(R,'darkwood',-w/2,w/2,-.25,-.06,-d/2,d/2); rb(R,'plIn',-w/2-.2,w/2+.2,0,h,-d/2-.2,-d/2); rb(R,'plIn',-w/2-.2,-w/2,0,h,-d/2,d/2); rb(R,'plIn',w/2,w/2+.2,0,h,-d/2,d/2);
+  /* 外壁・床下地 */ rb(R,'darkwood',-w/2,w/2,-.25,-.06,-d/2,d/2); rb(R,'plIn',-w/2-.2,w/2+.2,0,h,-d/2-.2,-d/2); rb(R,'plIn',-w/2-.2,-w/2,0,h,-d/2,d/2); rb(R,'plIn',w/2,w/2+.2,0,h,-d/2,-37.5); rb(R,'plIn',w/2,w/2+.2,0,h,-34.5,d/2); rb(R,'darkwood',w/2,w/2+.2,2.9,h,-37.5,-34.5); for(const zz of [-37.5,-34.5]) rb(R,'darkwood',w/2-.2,w/2+.2,0,2.9,zz-.12,zz+.12,true);
   const dw=3.2,dh=3.0; rb(R,'darkwood',-w/2-.2,dx-dw/2,0,h,d/2,d/2+.2); rb(R,'darkwood',dx+dw/2,w/2+.2,0,h,d/2,d/2+.2); rb(R,'darkwood',dx-dw/2,dx+dw/2,dh,h,d/2,d/2+.2); rb(R,'shoji',-w/2,dx-dw/2,.6,2.8,d/2-.02,d/2); rb(R,'shoji',dx+dw/2,w/2,.6,2.8,d/2-.02,d/2);
   R.rects=[{x0:R.ox-w/2+.45,x1:R.ox+w/2-.45,z0:R.oz-d/2+.45,z1:R.oz+d/2-.35}]; R.dw=dw; R.dh=dh; R.dx=dx;
   R.exitZone={x0:R.ox+dx-dw/2+.1,x1:R.ox+dx+dw/2-.1,z0:R.oz+d/2-.6,z1:R.oz+d/2+1}; R.spawn=[R.ox+dx,R.oz+d/2-3,0];
@@ -2571,21 +2572,23 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   zoneFloor(R,-36,36,24,30,'floor',0,3); zn(-36,36,24,30,'表 松之大廊下');
   pw(R,'x',-36,36,30,['tl_w_matsu'],[[-6,4],[22,30]],{step:2}); pw(R,'x',-36,36,24,['tl_w_matsu'],[[-30,-22],[16,24]],{step:2}); zoneCeil(R,-36,36,24,30,'darkwood');
   /* 白書院（将軍が大名と対面する格式の高い書院。上段・下段・連歌之間・帝鑑之間） */
-  zoneFloor(R,4,36,-2,24,'tatami'); jodan(R,22,36,-2,10,.38); zn(22,36,-2,10,'表 白書院（上段之間）'); zn(4,22,-2,24,'表 白書院（下段之間）'); zn(22,36,10,24,'表 白書院（帝鑑之間）');
+  zoneFloor(R,4,36,-2,24,'tatami'); jodan(R,22,36,-2,10,.38); zn(22,36,-2,10,'表 白書院（上段之間）'); zn(4,22,-2,24,'表 白書院（下段之間）'); zn(22,36,10,24,'表 白書院（連歌之間）');
   pw(R,'z',-2,24,22,['fsMokL','fsMokR'],[[12,18]],{step:2.2}); pw(R,'z',-2,24,4,['tl_w_tsurumatsu'],[[6,12]]); fusumaWallR(R,4.2,35.8,-1.8,23.8,['tl_w_tsurumatsu','fsMokL','fsMokR'],{noFront:true});
   zoneCeil(R,22,36,-2,10,'kinpaku','tl_c_houou'); zoneCeil(R,4,22,-2,24,'woodGrain','tl_c_kikub'); zoneCeil(R,22,36,10,24,'woodGrain','tl_c_kikub'); tokonoma(R,30,-1.8,5,1,3,'kmTsuru');
-  /* 黒書院（日常の対面の書院。素木の柱と水墨の襖で落ち着いた造り） */
-  zoneFloor(R,-36,4,-2,24,'tatami'); jodan(R,-36,-24,-2,10,.36); zn(-36,-24,-2,10,'表 黒書院（上段之間）'); zn(-24,4,-2,24,'表 黒書院'); zn(-36,-24,10,24,'表 黒書院（西湖之間）');
-  pw(R,'z',-2,24,-24,['suiboku'],[[12,18]]); fusumaWallR(R,-35.8,3.8,-1.8,23.8,['suiboku','tl_f_sansui'],{noFront:true}); zoneCeil(R,-36,4,-2,24,'woodGrain','tl_c_wood'); tokonoma(R,-30,-1.8,5,1,3);
-  /* ---------- 中奥 ---------- */
-  pw(R,'x',-36,36,-2,['tl_f_sansui','suiboku'],[[-18,-12],[8,14],[28,32]],{step:2}); /* 表と中奥の境（中奥の御錠口） */
+  /* 大名の詰所（殿席）: 登城した大名が家格ごとに控えた部屋。帝鑑之間・柳之間など */
+  zoneFloor(R,-36,4,-2,24,'tatami'); zn(-36,-16,-2,24,'表 帝鑑之間（大名の詰所）'); zn(-16,4,-2,24,'表 柳之間（大名の詰所）');
+  pw(R,'z',-2,24,-16,['tl_f_sansui','suiboku'],[[12,18]]); fusumaWallR(R,-35.8,3.8,-1.8,23.8,['tl_f_sansui','suiboku','tl_f_take'],{noFront:true}); zoneCeil(R,-36,4,-2,24,'woodGrain','tl_c_wood');
+  /* ---------- 白書院の北: 黒書院（竹之廊下でつながる）と中奥 ---------- */
+  pw(R,'x',-36,36,-2,['tl_f_sansui','suiboku'],[[-26,-20],[-6,0],[8,14]],{step:2}); /* 表と、黒書院・中奥の境 */
   zoneFloor(R,-36,36,-30,-2,'tatami');
-  /* 御座之間（将軍が日常に政務をとり、老中らと会う部屋） */ jodan(R,-36,-24,-30,-16,.36); zn(-36,-24,-30,-16,'中奥 御座之間（上段）'); zn(-36,-6,-30,-2,'中奥 御座之間');
-  pw(R,'z',-30,-2,-6,['tl_f_take','tl_f_kumo'],[[-18,-12]]); fusumaWallR(R,-35.8,-6.2,-29.8,-2.2,['tl_f_take','tl_f_kumo','tl_f_sansui'],{noFront:true}); zoneCeil(R,-36,-6,-30,-2,'woodGrain','tl_c_navykiku'); tokonoma(R,-30,-29.8,5,1,3,'kmTake');
-  /* 御休息之間（将軍の居間・寝所）と、小姓の詰所 */ zn(-6,22,-30,-2,'中奥 御休息之間'); zn(22,36,-30,-2,'中奥 御小姓の詰所');
-  pw(R,'z',-30,-2,22,['tl_f_kumo'],[[-12,-6]]); fusumaWallR(R,-5.8,35.8,-29.8,-2.2,['tl_f_kumo','tl_f_take'],{noFront:true}); zoneCeil(R,-6,36,-30,-2,'woodGrain');
+  /* 黒書院（日常の対面に使った書院。素木の柱と水墨の襖で落ち着いた造り） */ jodan(R,22,36,-30,-18,.36); zn(22,36,-30,-18,'表 黒書院（上段之間）'); zn(4,36,-30,-2,'表 黒書院');
+  zoneFloor(R,4,36,-6,-2,'floor',.01,3); zn(4,36,-6,-2,'表 竹之廊下・黒書院');
+  pw(R,'z',-30,-2,4,['suiboku'],[[-12,-6]]); fusumaWallR(R,4.2,35.8,-29.8,-2.2,['suiboku','tl_f_sansui'],{noFront:true}); zoneCeil(R,4,36,-30,-2,'woodGrain','tl_c_wood'); tokonoma(R,28,-29.8,5,1,3);
+  /* 中奥: 御座之間（将軍が日常に政務をとり、老中らと会う部屋）と御休息之間（将軍の居間・寝所） */
+  jodan(R,-36,-26,-30,-16,.36); zn(-36,-26,-30,-16,'中奥 御座之間（上段）'); zn(-36,-14,-30,-2,'中奥 御座之間'); zn(-14,4,-30,-2,'中奥 御休息之間');
+  pw(R,'z',-30,-2,-14,['tl_f_take','tl_f_kumo'],[[-18,-12]]); fusumaWallR(R,-35.8,3.8,-29.8,-2.2,['tl_f_take','tl_f_kumo','tl_f_sansui'],{noFront:true}); zoneCeil(R,-36,-14,-30,-2,'woodGrain','tl_c_navykiku'); zoneCeil(R,-14,4,-30,-2,'woodGrain'); tokonoma(R,-33,-29.8,5,1,3,'kmTake');
   /* 中奥と大奥の境: 銅の塀。御鈴廊下だけが通じる */
-  pw(R,'x',-36,36,-30,'darkwood',[[-24,-20],[28,32]],{step:3,upper:'darkwood'});
+  pw(R,'x',-36,36,-30,'darkwood',[[-24,-20]],{step:3,upper:'darkwood'});
   /* ---------- 御鈴廊下と中庭 ---------- */
   zoneFloor(R,-24,-20,-42,-30,'floor',0,3); zn(-24,-20,-42,-30,'御鈴廊下');
   pw(R,'z',-42,-30,-24,'darkwood',[],{low:1,lattice:true,upper:'darkwood'}); pw(R,'z',-42,-30,-20,'darkwood',[],{low:1,lattice:true,upper:'darkwood'});
@@ -2593,7 +2596,7 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   /* 中庭（白砂と松。天井がなく空が見える） */ for(const [x0,x1] of [[-36,-24],[-20,20]]){ rb(R,'stoneK',x0,x1,-.05,.05,-42,-30,false,2); R.boxes.push({x0:R.ox+x0,x1:R.ox+x1,z0:R.oz-42,z1:R.oz-30}); R.skyHoles=(R.skyHoles||[]).concat([[x0,x1,-42,-30]]); }
   /* 広敷向（大奥の役所。男の役人が詰め、七つ口で大奥と荷や手紙をやりとりした） */ zoneFloor(R,20,36,-42,-30,'woodGrain',0,3); zn(20,36,-42,-30,'大奥 広敷向（御広敷）');
   pw(R,'z',-42,-30,20,'plIn',[],{}); zoneCeil(R,20,36,-42,-30,'woodGrain');
-  /* 七つ口（広敷と長局の境の受け渡し口。人は通れない） */ pw(R,'x',20,36,-42,'darkwood',[],{low:1.1,lattice:false}); rb(R,'woodGrain',24,32,1.1,1.16,-42.4,-41.6); zn(24,32,-43,-41,'大奥 七つ口');
+  /* 七つ口（広敷と長局の境の受け渡し口。人は通れない） */ pw(R,'x',20,32,-42,'darkwood',[],{low:1.1,lattice:false}); rb(R,'woodGrain',23,31,1.1,1.16,-42.4,-41.6); zn(23,31,-43,-41,'大奥 七つ口'); pw(R,'x',32,36,-42,'woodGrain',[[32.6,35.4]]); zn(32,36,-43,-41,'大奥 広敷の御錠口');
   /* ---------- 大奥 ---------- */
   pw(R,'x',-36,20,-42,'darkwood',[[-24,-20]],{step:3,upper:'darkwood'});
   zoneFloor(R,-36,12,-75,-42,'tatami'); zoneFloor(R,12,36,-75,-42,'tatami');
@@ -2612,11 +2615,16 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   pw(R,'z',-75,-42,22,['tl_f_shoji','tl_w_shoji'],[0,1,2,3,4].map(k=>[-42-k*6.6-4.4,-42-k*6.6-2.2])); pw(R,'z',-75,-42,26,['tl_f_shoji','tl_w_shoji'],[0,1,2,3,4].map(k=>[-42-k*6.6-4.4,-42-k*6.6-2.2]));
   /* 部屋の柱 */ for(const [x,z] of [[12,30],[-14,30],[4,-2],[-24,-2],[-6,-30],[22,-30],[-16,-48],[12,-48],[-16,-75],[12,-75]]) rb(R,'darkwood',x-.16,x+.16,0,h,z-.16,z+.16,true);
   for(let i=0;i<26;i++){ const x=-34+(i%9)*8.5,z=72-Math.floor(i/9)*48; rg(R,'lampIn',new THREE.BoxGeometry(.28,.36,.28),x,2.2,z); }
-  R.zones=Z; }
+  R.zones=Z; fusumaWallRun(R);
+  /* 大奥の外からの入口: 広敷御門（本丸の東。役人や御用の者はここから広敷へ） */
+  { const ex=doorAt(45.3,-48,1,0); R.extra=[Object.assign(ex,{name:'大奥 広敷御門',spawn:[R.ox+w/2-2.2,R.oz-36,Math.PI/2]})];
+    R.exits=[{zone:{x0:R.ox+w/2-.5,x1:R.ox+w/2+1,z0:R.oz-37.4,z1:R.oz-34.6},pos:ex.exitPos,name:'広敷御門から外へ'}]; } }
 /* 襖を部屋の奥と左右の壁に（fusumaWall の部屋の中の範囲版） */
-function fusumaWallR(R,x0,x1,z0,z1,keys,o){ o=o||{}; let k=0; const y1=2.9,put=(cx,cz,len,ry)=>rg(R,keys[k++%keys.length],new THREE.BoxGeometry(len,y1,.03),cx,y1/2,cz,ry);
-  for(let x=x0;x<x1-.5;x+=1.8){ const e=Math.min(x1,x+1.8); put((x+e)/2,z0+.02,e-x-.06,0); }
-  for(const xx of [x0,x1]) for(let z=z0;z<z1-.5-(o.noFront?0:0);z+=1.8){ const e=Math.min(z1,z+1.8); put(xx+(xx===x0?.02:-.02),(z+e)/2,e-z-.06,Math.PI/2); } }
+function fusumaWallR(R,x0,x1,z0,z1,keys,o){ (R._fw=R._fw||[]).push([x0,x1,z0,z1,keys,o]); }
+function fusumaWallRun(R){ for(const a of R._fw||[]) fusumaWallR0(R,...a); }
+function fusumaWallR0(R,x0,x1,z0,z1,keys,o){ o=o||{}; let k=0; const hit=(ax,c,a,b)=>(R._gaps||[]).some(g=>g.ax===ax&&Math.abs(g.c-c)<.7&&a<g.g1+.1&&b>g.g0-.1); const y1=2.9,put=(cx,cz,len,ry)=>rg(R,keys[k++%keys.length],new THREE.BoxGeometry(len,y1,.03),cx,y1/2,cz,ry);
+  for(let x=x0;x<x1-.5;x+=1.8){ const e=Math.min(x1,x+1.8); if(hit('x',z0,x,e)) continue; put((x+e)/2,z0+.02,e-x-.06,0); }
+  for(const xx of [x0,x1]) for(let z=z0;z<z1-.5;z+=1.8){ const e=Math.min(z1,z+1.8); if(hit('z',xx,z,e)) continue; put(xx+(xx===x0?.02:-.02),(z+e)/2,e-z-.06,Math.PI/2); } }
 /* 百人番所（大手三之門から中之門への道を守った番所。甲賀組・伊賀組・根来組・二十五騎組の同心が交代で詰めた） */
 { const b=BANSHO[1],R=RD.hyakunin=mkRoom(Object.assign({era:'edo'},doorAt(147,b.z1+.6,0,1),roomTxt('百人番所','ひゃくにんばんしょ','本丸へ向かう道でいちばん大きな番所。鉄砲百人組とよばれた甲賀組・伊賀組・根来組・二十五騎組の4組が昼夜交代で詰め、本丸・二の丸を守りました。長さ50mをこえる細長い建物で、いまも残っています（中のようすは想像）。',[['役目','本丸・二の丸の警備'],['詰めた組','甲賀・伊賀・根来・二十五騎'],['いま','建物が残る（中は非公開）']])));
   const w=24,d=7,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'tsuchi',front:'shoji',ceil:'woodGrain',door:2,lamps:3}); pillarsRow(R,'darkwood',w,d,h,3,false);
@@ -2657,6 +2665,7 @@ const machiD=m=>{ const c=Math.cos(m.ry),s=Math.sin(m.ry); return {px:m.cx+m.eo*
 const bukeD=(b,era)=>{ const f=b.face,n=f==='e'?[1,0]:f==='w'?[-1,0]:f==='s'?[0,1]:[0,-1]; return autoDoor(era,b.hx,b.hz,b.hw/2+.5,b.hd/2+.5,n); };
 const ygD=(y,era)=>{ const c=Math.abs(Math.cos(y.ry)),s=Math.abs(Math.sin(y.ry)),hx=y.w/2*c+y.d/2*s+.6,hz=y.w/2*s+y.d/2*c+.6; const d=autoDoor(era,y.cx,y.cz,hx,hz,[0,1]); if(d) d.y=y.y; return d; };
 const ygPar=(y,era)=>era==='modern'?(y.par===GM):(y.par===GE||y.par===scene);
+/* 大奥の広敷御門の戸 */ doorBatch('edo',45.3,-48,1,0,2.2,2.8,PL.honmaru.H,'#5a2a2a');
 /* ----- 現代 ----- */
 B=BM;
 { const R=RD.xShop=mkRoom(Object.assign({era:'modern'},doorAt(0,-9000,0,1),roomTxt('ビルの1階のお店','ビル の おみせ','大手町・丸の内のビルの1階。中のようすは想像です。',[['場所','大手町・丸の内']])));
@@ -2698,7 +2707,7 @@ const SPOTS=[
    edo:{name:'本丸御殿（表・中奥・大奥）',pos:[24,79],look:[24,22,60],text:'将軍の住まいであり、幕府の政治の中心だった巨大な御殿。南東の玄関から中へ入れます。遠侍・大広間・松之大廊下・白書院・黒書院（表）、御座之間・御休息之間（中奥）を抜け、御鈴廊下の御錠口をくぐると大奥です。',meta:[['再建','寛永17年（1640）'],['構成','表・中奥・大奥'],['入口','南東の玄関']]}},
   {id:'ooku',name:'大奥の跡',kana:'おおおく',at:[10,-110],pos:[24,-110],look:[10,18,-140],q:'Edo castle Ooku site',
    text:'本丸の北半分、天守台のすぐ南は大奥でした。将軍の正室（御台所）・側室・子どもたちと、多いときは千人をこえる奥女中が暮らし、男子禁制の世界でした。いまは芝生と林になり、桃華楽堂が建っています。',meta:[['かつて','大奥（御殿向・長局向・広敷向）'],['仕組み','中奥と御鈴廊下でつながる']],
-   edo:{name:'大奥',pos:[52,-110],look:[20,20,-110],text:'中奥と銅の塀で仕切られた大奥。将軍の寝所の御小座敷、御台所の御座所や御仏間のある「御殿向」、奥女中の住まいの「長局向」、男の役人が詰める「広敷向」に分かれていました。寛永のころは3代家光の乳母・春日局が大奥を取り仕切ったといわれます。本丸御殿の玄関から入り、御鈴廊下を通って中を歩けます（間取りは後の時代の絵図をもとにした想像）。',meta:[['区画','御殿向・長局向・広敷向'],['出入口','御鈴廊下の御錠口・七つ口'],['ゆかりの人','春日局（家光の乳母）']]}},
+   edo:{name:'大奥',pos:[52,-48],look:[40,19,-60],text:'中奥と銅の塀で仕切られた大奥。将軍の寝所の御小座敷、御台所の御座所や御仏間のある「御殿向」、奥女中の住まいの「長局向」、男の役人が詰める「広敷向」に分かれていました。寛永のころは3代家光の乳母・春日局が大奥を取り仕切ったといわれます。すぐ西の「広敷御門」から広敷に入り、広敷の御錠口を通って中を歩けます。本丸御殿の玄関から表・中奥を抜け、御鈴廊下を通って入ることもできます（間取りは後の時代の絵図をもとにした想像）。',meta:[['区画','御殿向・長局向・広敷向'],['入口','広敷御門・御鈴廊下の御錠口'],['ゆかりの人','春日局（家光の乳母）']]}},
   {id:'matsu',name:'松の大廊下跡',kana:'まつのおおろうかあと',at:[-36,32],pos:[-36,38],look:[-36,17,30],q:'Matsu no Oroka Edo castle',modernOnly:true,
    text:'本丸御殿の大広間と白書院を結んだ長さ約50mの廊下の跡に、石碑が立ちます。襖に浜辺の松と千鳥が描かれていたことからこの名があり、元禄14年（1701）、赤穂藩主浅野内匠頭が吉良上野介に斬りつけた所として知られます。',meta:[['長さ','約50m（L字形）'],['事件','元禄14年（1701）松の廊下の刃傷']]},
   {id:'fujimi',name:'富士見櫓',kana:'ふじみやぐら',at:[-62,96],pos:[-38,92],look:[-62,26,96],q:'Fujimi-yagura Edo castle',
@@ -3002,9 +3011,9 @@ ROOMS.forEach(R=>{ for(const e of R.extra||[]){ if(e.noMark) continue; const cx=
 for(const [era,par] of [['edo',GE]]){ const E=TEN[era].entry,t=labelSprite('天守入口（穴蔵）','近づくと入れます'); t.position.set(E.cx,TZ.g0+5.2,E.Z+1); par.add(t); DOOR_MARKS.push({sp:t,base:TZ.g0+5.2,era,x:E.cx,z:E.Z+1.2}); }
 function updateDoorMarks(t){ for(const d of DOOR_MARKS){ d.sp.position.y=d.base+Math.sin(t*2+d.x)*.12; const dist=Math.hypot(P.x-d.x,P.z-d.z); d.sp.visible=!P.room&&P.level<0&&dist<140&&dist>7; d.sp.material.opacity=Math.min(1,Math.max(.25,1.3-dist/120)); } }
 /* 近くの入口 → 画面下のボタンで入る */
-function doorSpot(){ if(P.room){ const R=P.room; return Math.hypot(P.x-(R.exitZone.x0+R.exitZone.x1)/2,P.z-(R.exitZone.z0+R.exitZone.z1)/2)<2.6?{name:'外に出る',exit:true}:null; }
-  if(P.level>=0||P.mode!=='walk') return null; let best=null,bd=7,bx=null; for(const R of ROOMS){ if(R.era!==MODE) continue; for(const E of [R.exitPos,...(R.extra||[]).map(e=>e.exitPos)]){ const d=Math.hypot(P.x-E[0],P.z-E[1]); if(d<bd){ bd=d; best=R; bx=E; } } }
-  if(best) return {name:best.name.replace(/（.*?）/g,'')+'に入る',enter:best,ex:bx};
+function doorSpot(){ if(P.room){ const R=P.room; for(const e of R.exits||[]) if(Math.hypot(P.x-(e.zone.x0+e.zone.x1)/2,P.z-(e.zone.z0+e.zone.z1)/2)<2.6) return {name:'外に出る',exit:true,via:e.pos}; return Math.hypot(P.x-(R.exitZone.x0+R.exitZone.x1)/2,P.z-(R.exitZone.z0+R.exitZone.z1)/2)<2.6?{name:'外に出る',exit:true}:null; }
+  if(P.level>=0||P.mode!=='walk') return null; let best=null,bd=7,bx=null,bs=null,bn=null; for(const R of ROOMS){ if(R.era!==MODE) continue; for(const X of [{exitPos:R.exitPos},...(R.extra||[])]){ const E=X.exitPos,d=Math.hypot(P.x-E[0],P.z-E[1]); if(d<bd){ bd=d; best=R; bx=E; bs=X.spawn; bn=X.spawn?X.name:null; } } }
+  if(best) return {name:(bn||best.name.replace(/（.*?）/g,''))+'に入る',enter:best,ex:bx,sp:bs};
   if(!TEN[MODE].none&&!SCEN){ const E=TEN[MODE].entry; if(Math.abs(P.x-E.cx)<3&&P.z>E.Z-.5&&P.z<E.Z+5&&Math.abs(groundH(P.x,P.z)-TZ.g0)<1.2) return {name:'天守に入る',keep:true}; } return null; }
 
 function roomOK(R,x,z){ return R.rects.some(r=>inR(r,x,z,0))&&!R.boxes.some(b=>inR(b,x,z,.25)); }
@@ -3018,7 +3027,7 @@ setTimeout(()=>{ try{ const old=MODE; const clr=(x,z,a)=>{ const fx=-Math.sin(a)
   const pocket=E=>{ const seen=new Set(),q=[[Math.round(E[0]),Math.round(E[1])]]; seen.add(q[0]+''); while(q.length){ const [x,z]=q.pop(); for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){ const X=x+a,Z=z+b,k=X+','+Z; if(seen.has(k)||!walkable(X+.1,Z+.1)) continue; seen.add(k); if(seen.size>160) return false; q.push([X,Z]); } } return true; };
   for(const R of ROOMS){ if(R.era) MODE=R.era; fix(R.exitPos); if(R.extra) R.extra=R.extra.filter(e=>{ if(!e.exitPos) return true; fix(e.exitPos); return !pocket(e.exitPos); }); MODE=old; } }catch(e){ console.warn('exitfix',e); } },0);
 function roomStep(R,x,z){ if(!R.steps) return 0; for(const s of R.steps) if(x>s.x0&&x<s.x1&&z>s.z0&&z<s.z1) return s.h; return 0; }
-function enterRoom(R,ex){ P.exitVia=ex||R.exitPos; P.room=R; P.level=-1; P.x=R.spawn[0]; P.z=R.spawn[1]; P.yaw=R.spawn[2]; P.y=R.y+1.6; P.pitch=0; lastArea=''; showHint(R.name+'に入りました。出口へ向かうと外に出ます'); }
+function enterRoom(R,ex,sp){ const S=sp||R.spawn; P.exitVia=ex||R.exitPos; P.room=R; P.level=-1; P.x=S[0]; P.z=S[1]; P.yaw=S[2]; P.y=R.y+1.6; P.pitch=0; lastArea=''; showHint(R.name+'に入りました。出口へ向かうと外に出ます'); }
 function exitRoom(){ const R=P.room,E=P.exitVia||R.exitPos; P.room=null; P.x=E[0]; P.z=E[1]; P.yaw=E[2]; if(!walkable(P.x,P.z)){ const bx=P.x,bz=P.z; let f=false; for(let r=.5;r<=8&&!f;r+=.5) for(let k=0;k<24&&!f;k++){ const an=k/24*6.283,x=bx+Math.cos(an)*r,z=bz+Math.sin(an)*r; if(walkable(x,z)&&!ROOMS.some(Q=>Q.era===MODE&&inR(Q.zone,x,z,.4))){ P.x=x; P.z=z; f=true; } } } P.y=groundH(P.x,P.z)+1.6; lastArea=''; showHint('外に出ました'); }
 function lookAtSpot(s){ const dx=s.look[0]-s.pos[0],dz=s.look[2]-s.pos[1],dy=s.look[1]-1.6-groundH(s.pos[0],s.pos[1]); P.yaw=Math.atan2(-dx,-dz); P.pitch=Math.max(-.3,Math.min(.35,Math.atan2(dy,Math.hypot(dx,dz)))); }
 function teleport(s){ P.room=null; P.level=-1; P.x=s.pos[0]; P.z=s.pos[1];
@@ -3086,7 +3095,7 @@ function updatePlayer(dt){ let ix=0,iz=0; if(keys.KeyW||keys.ArrowUp) iz+=1; if(
   const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);
   const dx=(fx*iz+rx*ix)*sp*dt,dz=(fz*iz+rz*ix)*sp*dt;
   if(drone){ P.x=Math.max(BOUNDS.x0-60,Math.min(BOUNDS.x1+60,P.x+dx)); P.z=Math.max(BOUNDS.z0-60,Math.min(BOUNDS.z1+60,P.z+dz)); }
-  else if(P.room){ const R=P.room,nx=P.x+dx,nz=P.z+dz; if(inR(R.exitZone,nx,nz,0)&&(R.exitDir==='w'?dx<0:dz>0)){ exitRoom(); }
+  else if(P.room){ const R=P.room,nx=P.x+dx,nz=P.z+dz; const IX=(R.exits||[]).find(e=>inR(e.zone,nx,nz,0)); if(IX){ P.exitVia=IX.pos; exitRoom(); } else if(inR(R.exitZone,nx,nz,0)&&(R.exitDir==='w'?dx<0:dz>0)){ if(R.exits) P.exitVia=R.exitPos; exitRoom(); }
     else if(roomOK(R,nx,nz)){ P.x=nx; P.z=nz; } else if(roomOK(R,nx,P.z)) P.x=nx; else if(roomOK(R,P.x,nz)) P.z=nz; }
   else if(P.level>=0){ const L=P.level,E=TEN[MODE].entry;
     if(L===0&&dz>0&&P.z+dz>E.Z-.2&&Math.abs(P.x-E.cx)<1.7){ P.level=-1; P.z=E.Z+1; P.y=TZ.g0+1.6; showHint('小天守台の枡形に出ました。東の門から本丸へ出られます'); }
@@ -3094,7 +3103,7 @@ function updatePlayer(dt){ let ix=0,iz=0; if(keys.KeyW||keys.ArrowUp) iz+=1; if(
       else if((r=stepIn(L,P.x,P.z,P.x+dx,P.z))>=0){ P.x+=dx; P.level=r; } else if((r=stepIn(L,P.x,P.z,P.x,P.z+dz))>=0){ P.z+=dz; P.level=r; } } }
   else if(!TEN[MODE].none&&!SCEN&&dz<0&&Math.abs(P.x-TEN[MODE].entry.cx)<1.3&&P.z+dz<TEN[MODE].entry.Z+.6&&P.z>TEN[MODE].entry.Z-.6&&Math.abs(groundH(P.x,P.z)-TZ.g0)<.8){ P.level=0; P.z=TEN[MODE].entry.Z-.4; P.y=TZ.g0+1.6; showHint(TEN[MODE].entry.small?'小天守の地階（穴蔵）から天守閣に入りました。北の廊下を通って大天守の地階へ進み、階段で1階へ上れます':'天守の地階（穴蔵）に入りました。東の階段で1階へ上れます'); }
   else if(!P.room&&ROOMS.some(R=>R.era===MODE&&inR(R.zone,P.x+dx,P.z+dz,0))){ enterRoom(ROOMS.find(R=>R.era===MODE&&inR(R.zone,P.x+dx,P.z+dz,0))); }
-  else if(!P.room&&ROOMS.some(R=>R.era===MODE&&R.extra&&R.extra.some(e=>inR(e.zone,P.x+dx,P.z+dz,0)))){ const R=ROOMS.find(R=>R.era===MODE&&R.extra&&R.extra.some(e=>inR(e.zone,P.x+dx,P.z+dz,0))); enterRoom(R,R.extra.find(e=>inR(e.zone,P.x+dx,P.z+dz,0)).exitPos); }
+  else if(!P.room&&ROOMS.some(R=>R.era===MODE&&R.extra&&R.extra.some(e=>inR(e.zone,P.x+dx,P.z+dz,0)))){ const R=ROOMS.find(R=>R.era===MODE&&R.extra&&R.extra.some(e=>inR(e.zone,P.x+dx,P.z+dz,0))); { const e=R.extra.find(e=>inR(e.zone,P.x+dx,P.z+dz,0)); enterRoom(R,e.exitPos,e.spawn); } }
   else if(stepOK(P.x+dx,P.z+dz)){ P.x+=dx; P.z+=dz; } else if(stepOK(P.x+dx,P.z)) P.x+=dx; else if(stepOK(P.x,P.z+dz)) P.z+=dz;
   const nn=(P.level>=0||P.room)?.08:.25; if(camera.near!==nn){ camera.near=nn; camera.updateProjectionMatrix(); }
   const ty=drone?Math.max(86,groundH(P.x,P.z)+40):(P.room?P.room.y+roomStep(P.room,P.x,P.z):P.level>=0?floorY(P.level,P.x,P.z):groundH(P.x,P.z,P.y-1.6))+1.6; if(!P.camLock) P.y+=(ty-P.y)*Math.min(1,dt*(drone?1.6:10));
@@ -3171,7 +3180,7 @@ $('spotsBtn').onclick=()=>{ if(started) openSpots(); }; $('spotsX').onclick=clos
 $('cardX').onclick=closeCard; $('mapX').onclick=closeMap; $('mini').onclick=()=>{ if(started) openMap(); };
 /* 天守閣のエレベーター（1階⇔5階） */
 function elevSpot(){ return null; }
-$('poi').onclick=()=>{ if(!nearSpot) return; if(nearSpot.enter){ enterRoom(nearSpot.enter,nearSpot.ex); nearSpot=null; return; } if(nearSpot.exit){ exitRoom(); nearSpot=null; return; }
+$('poi').onclick=()=>{ if(!nearSpot) return; if(nearSpot.enter){ enterRoom(nearSpot.enter,nearSpot.ex,nearSpot.sp); nearSpot=null; return; } if(nearSpot.exit){ if(nearSpot.via) P.exitVia=nearSpot.via; else if(P.room&&P.room.exits) P.exitVia=P.room.exitPos; exitRoom(); nearSpot=null; return; }
   if(nearSpot.keep){ const E=TEN[MODE].entry; P.level=0; P.x=E.cx; P.z=E.Z-.6; P.y=TZ.g0+1.6; P.yaw=0; P.pitch=0; showHint('天守の地階（穴蔵）に入りました。東の階段で1階へ上れます'); nearSpot=null; return; }
   openCard(nearSpot); };
 function nearestSpot(){ return curSpots.reduce((a,b)=>Math.hypot(b.pos[0]-P.x,b.pos[1]-P.z)<Math.hypot(a.pos[0]-P.x,a.pos[1]-P.z)?b:a); }
@@ -3356,7 +3365,7 @@ for(const [s,x,y,z] of DECO_KEEP){ if(!decoT.add(s,x,y,z,{})) edoPut(KXI,s,x,y,z
   rp(G,'i_zushi',-26,0,-74,{},true); rp(G,'i_koro_kin',-26,0,-72); rp(G,'lady_walk',-20,0,-68,{flip:true},true,['女中','御仏間には、歴代の上様のご位牌をおまつりしております。']);
   rp(G,'i_kyodai',0,0,-73.6,{},true); rp(G,'i_tansu_shu',8,0,-74,{},true); rp(G,'i_tansu_kuro',-10,0,-74,{},true); rp(G,'lady_tray2',4,0,-70,{},true,['御化粧之間の女中','御台所さまのお髪を結い上げるのも、わたしたちの務め。']);
   const NGS=[['onna_b','春日局（想像）','わたしは上様（家光公）の乳母。大奥のきまりを定め、上様をお支えしてまいりました。'],['az_nyobo','長局の女中','長局は女中の住まい。身分によって部屋の広さがちがいます。'],['lady_tray','部屋方の女中','わたしは御中臈さまの部屋の者。お部屋のお世話をしております。'],['musume_r','見習いの娘','行儀見習いに上がりました。大奥のしきたりは覚えることばかり。'],['az_nyobo','御右筆','大奥の文書はわたしたちが書きます。']];
-  for(let k=0;k<5;k++){ const zc=-42-k*6.6-3.3; for(const [xc,side] of [[17,0],[31,1]]){ const P2=NGS[(k*2+side)%NGS.length]; if(k===0&&side===0) rp(G,NGS[0][0],xc,0,zc,{},true,[NGS[0][1],NGS[0][2]]); else if((k+side)%2===0) rp(G,P2[0],xc,0,zc,{},true,[P2[1],P2[2]]); rp(G,pick(['i_andon','i_tansu_kuro','i_kobako']),xc+(side?3.5:-3.5),0,zc-1.8); } }
+  for(let k=0;k<5;k++){ const zc=-42-k*6.6-3.3; for(const [xc,side] of [[17,0],[31,1]]){ const P2=NGS[(k*2+side)%NGS.length]; const px=xc+(side?2.6:-2.6),pz=zc-2.1; if(k===0&&side===0) rp(G,NGS[0][0],px,0,pz,{},true,[NGS[0][1],NGS[0][2]]); else if((k+side)%2===0) rp(G,P2[0],px,0,pz,{},true,[P2[1],P2[2]]); rp(G,pick(['i_andon','i_tansu_kuro','i_kobako']),xc+(side?-2.6:2.6),0,zc-2.3); } }
   rp(G,'samurai_a',26,0,-34,{},true,['広敷番','ここは広敷。男の役人が大奥の用をつとめるが、奥へは決して入らぬ。']); rp(G,'ninpu',30,0,-40.2,{},false,['御用達の商人','七つ口で品物をお渡しするのです。中へは入れません。']);
   rp(D.hyakunin,'teppo_a',-6,0,-1,{},true,['伊賀組の同心','鉄砲百人組が交代で詰め、昼も夜もこの道を守っておる。']); rp(D.hyakunin,'ashigaru',4,0,-1,{flip:true},true,['甲賀組の同心','わしらは甲賀組じゃ。本丸へ通る者をあらためる。']);
   rp(D.daimyo,'lord_navy',-5.5,.38,-1,{},true,['大名（想像）','上様の御成をお迎えするため、この書院を金で飾らせたのじゃ。']); rp(D.daimyo,'i_toro_kin',-7.2,.38,-3.5); rp(D.daimyo,'sam_kami',2,0,1,{flip:true},true,['家老','御成の支度には、何年もかかるものでござる。']);
@@ -3864,7 +3873,7 @@ try{ const m=new URLSearchParams(location.search).get('era'); if(m!=='modern'){ 
 ROOMS.forEach(R=>{ if(!R.exitZone||!R.spawn||!R.boxes) return; const ez=R.exitZone,sx=R.spawn[0],sz=R.spawn[1],cor={x0:Math.min(sx,ez.x0)-.6,x1:Math.max(sx,ez.x1)+.6,z0:Math.min(sz,ez.z0)-1.2,z1:Math.max(sz,ez.z1)+.6};
   R.boxes=R.boxes.filter(b=>!(b.x1+.25>cor.x0&&b.x0-.25<cor.x1&&b.z1+.25>cor.z0&&b.z0-.25<cor.z1)); });
 requestAnimationFrame(frame);
-window.__dbg={groundH,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
+window.__dbg={groundH,roomOK,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
 window.__oc={spotList:()=>spotList(),stepOK:(x,z)=>stepOK(x,z),dbgBlock:(x,z,m)=>{ const out=[]; for(const k of ['shared',MODE]){ const l=BSETS[k].grid.get(Math.floor(x/GC)+','+Math.floor(z/GC))||[]; for(const b of l) if(inR(b,x,z,m||.35)) out.push(k+':'+b.kind+' '+[b.x0,b.z0,b.x1,b.z1].map(v=>v.toFixed(1)).join(',')); } return out.join(' | ')+' walk='+walkable(x,z)+' g='+groundH(x,z).toFixed(2)+' water='+waterAt(x,z,.6); },P,dbg:{renderer,M,sun,camera,scene},ROOMS,walkable,groundH,walkFloor:(L,x,z)=>walkFloor(L,x,z),spots:()=>curSpots,enterRoom,sim:(n,dt,k)=>{ Object.assign(keys,k||{}); for(let i=0;i<n;i++) updatePlayer(dt||.05); for(const q in k||{}) keys[q]=false; },setMode,teleport:id=>{ const s=curSpots.find(q=>q.id===id); if(s) teleport(s); },start:()=>$('goBtn').click(),TEN,get MODE(){ return MODE; }};
 /* スマホでGPUのメモリが足りずに描画が止まったとき: 黒い画面のままにせず、画質「軽」にして読み直す */
 renderer.domElement.addEventListener('webglcontextlost',e=>{ e.preventDefault(); try{ localStorage.setItem('oc-az-q','low'); }catch(_){}
