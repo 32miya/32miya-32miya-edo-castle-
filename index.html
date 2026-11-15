@@ -2689,7 +2689,7 @@ const ERA_B=e=>e==='modern'?BM:BE;
 function doorBatch(era,x,z,nx,nz,w,h,y,col){ const Bt=ERA_B(era),old=MODE; MODE=era; let wx=x,wz=z; for(let k=0;k<40&&!hitBlock(wx,wz,0);k++){ wx-=nx*.1; wz-=nz*.1; } MODE=old;
   const ry=Math.atan2(nx,nz),ox=wx+nx*.05,oz=wz+nz*.05,cr=Math.cos(ry),sr=Math.sin(ry);
   Bt.black.add(new THREE.BoxGeometry(w,h,.04),TM(ox,y+h/2,oz,ry)); for(const s of [-1,1]) Bt.darkwood.add(new THREE.BoxGeometry(.18,h+.2,.18),TM(ox+cr*s*(w/2+.09),y+(h+.2)/2,oz-sr*s*(w/2+.09)));
-  Bt.darkwood.add(new THREE.BoxGeometry(w+.5,.2,.22),TM(ox,y+h+.1,oz,ry)); if(col) Bt.noren.add(new THREE.BoxGeometry(w*.92,.7,.03),TM(ox+nx*.09,y+h-.38,oz+nz*.09,ry),new THREE.Color(col)); }
+  Bt.darkwood.add(new THREE.BoxGeometry(w+.5,.2,.22),TM(ox,y+h+.1,oz,ry)); (window.__DPP=window.__DPP||[]).push({era,x:ox+nx*1.2,z:oz+nz*1.2,sx:ox+nx*.4,sz:oz+nz*.4,y:y+h+.9}); if(col) Bt.noren.add(new THREE.BoxGeometry(w*.92,.7,.03),TM(ox+nx*.09,y+h-.38,oz+nz*.09,ry),new THREE.Color(col)); }
 function autoDoor(era,cx,cz,hx,hz,pref){ const old=MODE; MODE=era; let r=null; const C=[[0,1],[0,-1],[1,0],[-1,0]]; if(pref) C.unshift(pref);
   for(const [nx,nz] of C){ const px=cx+nx*(hx+.55),pz=cz+nz*(hz+.55); if(walk0(px+nx*.8,pz+nz*.8)&&walk0(px+nx*2.4,pz+nz*2.4)){ r={px,pz,nx,nz}; break; } } MODE=old; return r; }
 const ROOMS0=ROOMS.slice();
@@ -3027,7 +3027,9 @@ function labelSprite(text,sub){ const c=makeCanvas(512,160),g=c.getContext('2d')
   g.fillStyle='#d2452c'; g.save(); g.translate(46,80); g.rotate(Math.PI/4); g.fillRect(-13,-13,26,26); g.restore();
   g.fillStyle='#eef0f1'; g.font='bold 52px "Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif'; g.textBaseline='middle'; g.fillText(text,82,62); g.font='34px "Hiragino Sans","Noto Sans JP",sans-serif'; g.fillStyle='#c9ccd0'; g.fillText(sub,84,118);
   const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthWrite:false,toneMapped:false,fog:false})); s.scale.set(5.2,1.62,1); s.renderOrder=5; return s; }
-const DOOR_MARKS=[];
+const DOOR_MARKS=[],DOORPTS=[]; window.__DP=DOORPTS;
+function smallMark(){ const c=makeCanvas(256,128),g=c.getContext('2d'); g.fillStyle='rgba(17,18,20,.85)'; g.beginPath(); g.roundRect?g.roundRect(4,4,248,86,20):g.rect(4,4,248,86); g.fill(); g.strokeStyle='#e8b84a'; g.lineWidth=5; g.stroke(); g.fillStyle='#e8b84a'; g.beginPath(); g.moveTo(108,92); g.lineTo(148,92); g.lineTo(128,122); g.closePath(); g.fill(); g.fillStyle='#fff'; g.font='bold 50px "Hiragino Sans","Noto Sans JP",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('入口',128,48);
+  const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthWrite:false,toneMapped:false,fog:false,transparent:true})); s.scale.set(1.9,.95,1); s.renderOrder=5; return s; }
 function doorMark(par,era,x,z,nx,nz,name,w,h,o){ o=o||{}; const old=MODE; MODE=era; let wx=x,wz=z; for(let k=0;k<40&&!hitBlock(wx,wz,0);k++){ wx-=nx*.1; wz-=nz*.1; } MODE=old;
   const ry=Math.atan2(nx,nz),y0=o.y||0,g=new THREE.Group(); g.position.set(wx+nx*.06,y0,wz+nz*.06); g.rotation.y=ry; par.add(g);
   if(!o.open){ const dk=mesh(new THREE.PlaneGeometry(w,h),M.black,false,false); dk.position.y=h/2; g.add(dk); if(o.room) o.room.dk=dk;
@@ -3036,14 +3038,16 @@ function doorMark(par,era,x,z,nx,nz,name,w,h,o){ o=o||{}; const old=MODE; MODE=e
   const l=mesh(new THREE.BoxGeometry(w+.8,.26,.3),M.darkwood); l.position.set(0,h+.25,.12); g.add(l);
   if(!o.noNoren){ const n=mesh(new THREE.PlaneGeometry(w*.94,.8),o.norenMat||M.noren); n.position.set(0,h-.42,.16); g.add(n); if(n.geometry.attributes&&!o.norenMat){ const c=new Float32Array(n.geometry.attributes.position.count*3); const col=new THREE.Color(o.noren||'#26406a').convertSRGBToLinear(); for(let i=0;i<c.length;i+=3){ c[i]=col.r; c[i+1]=col.g; c[i+2]=col.b; } n.geometry.setAttribute('color',new THREE.BufferAttribute(c,3)); } }
   const lp=mesh(new THREE.BoxGeometry(.32,.46,.32),M.lantern,false,false); lp.position.set(w/2+.55,h*.72,.35); g.add(lp);
-  if(o.noLabel) return; const sp=labelSprite(name,o.sub||'入口 · 近づくと入れます'); sp.position.set(0,h+1.9,.4); g.add(sp);
+  DOORPTS.push({era,x:wx+nx*1.2,z:wz+nz*1.2,big:!o.noLabel});
+  if(o.noLabel){ const sm=smallMark(); sm.position.set(0,h+.9,.4); g.add(sm); DOOR_MARKS.push({sp:sm,base:h+.9,era,x:wx+nx*1.2,z:wz+nz*1.2,r:45}); return; } const sp=labelSprite(name,o.sub||'入口 · 近づくと入れます'); sp.position.set(0,h+1.9,.4); g.add(sp);
   DOOR_MARKS.push({sp,base:h+1.9,era,x:wx+nx*1.2,z:wz+nz*1.2}); }
 ROOMS.forEach(R=>{ const dx=R.exitPos[0]-R.door[0],dz=R.exitPos[1]-R.door[1],l=Math.hypot(dx,dz)||1; R.nrm=[dx/l,dz/l];
   const small=R.name.includes('茶室'); doorMark(R.era==='modern'?GM:GE,R.era,R.door[0],R.door[1],dx/l,dz/l,R.name.replace(/（.*?）/g,''),small?.8:1.8,small?.9:2.4,{norenMat:R.era==='edo'&&R!==RD.machi&&R!==RD.semi?M.norenTenka:undefined,noren:R.era==='modern'?'#3b3a52':'#26406a',noNoren:small,sub:small?'にじり口 · 近づくと入れます':undefined,room:R}); });
 /* 渡り廊下からの入口 */
 ROOMS.forEach(R=>{ for(const e of R.extra||[]){ if(e.noMark) continue; const cx=(e.zone.x0+e.zone.x1)/2,cz=(e.zone.z0+e.zone.z1)/2,dx=e.exitPos[0]-cx,dz=e.exitPos[1]-cz,l=Math.hypot(dx,dz)||1; doorMark(GE,R.era,cx,cz,dx/l,dz/l,e.name||R.name.replace(/（.*?）/g,''),1.8,2.4,{noren:e.mark?'#5a2a20':'#26406a',sub:'渡り廊下から · 近づくと入れます',noLabel:!!e.mark}); } });
-for(const [era,par] of [['edo',GE]]){ const E=TEN[era].entry,t=labelSprite('天守入口（穴蔵）','近づくと入れます'); t.position.set(E.cx,TZ.g0+5.2,E.Z+1); par.add(t); DOOR_MARKS.push({sp:t,base:TZ.g0+5.2,era,x:E.cx,z:E.Z+1.2}); }
-function updateDoorMarks(t){ for(const d of DOOR_MARKS){ d.sp.position.y=d.base+Math.sin(t*2+d.x)*.12; const dist=Math.hypot(P.x-d.x,P.z-d.z); d.sp.visible=!P.room&&P.level<0&&dist<140&&dist>7; d.sp.material.opacity=Math.min(1,Math.max(.25,1.3-dist/120)); } }
+for(const [era,par] of [['edo',GE]]){ const E=TEN[era].entry,t=labelSprite('天守入口（穴蔵）','近づくと入れます'); t.position.set(E.cx,TZ.g0+5.2,E.Z+1); par.add(t); DOOR_MARKS.push({sp:t,base:TZ.g0+5.2,era,x:E.cx,z:E.Z+1.2}); DOORPTS.push({era,x:E.cx,z:E.Z+1.2,big:true}); }
+/* 町家・武家屋敷・櫓など、名札のない入口にも小さな「入口」の印 */ for(const p of (window.__DPP||[])){ if(DOORPTS.some(q=>q.era===p.era&&Math.hypot(q.x-p.x,q.z-p.z)<2.5)) continue; const sm=smallMark(); sm.position.set(p.sx,p.y,p.sz); (p.era==='modern'?GM:GE).add(sm); DOOR_MARKS.push({sp:sm,base:p.y,era:p.era,x:p.x,z:p.z,r:45}); DOORPTS.push({era:p.era,x:p.x,z:p.z,big:false}); }
+function updateDoorMarks(t){ for(const d of DOOR_MARKS){ d.sp.position.y=d.base+Math.sin(t*2+d.x)*.12; const dist=Math.hypot(P.x-d.x,P.z-d.z); d.sp.visible=!P.room&&P.level<0&&d.era===MODE&&dist<(d.r||140)&&dist>(d.r?2.5:7); d.sp.material.opacity=Math.min(1,Math.max(.25,1.3-dist/120)); } }
 /* 近くの入口 → 画面下のボタンで入る */
 function doorSpot(){ if(P.room){ const R=P.room; for(const e of R.exits||[]) if(Math.hypot(P.x-(e.zone.x0+e.zone.x1)/2,P.z-(e.zone.z0+e.zone.z1)/2)<2.6) return {name:'外に出る',exit:true,via:e.pos}; return Math.hypot(P.x-(R.exitZone.x0+R.exitZone.x1)/2,P.z-(R.exitZone.z0+R.exitZone.z1)/2)<2.6?{name:'外に出る',exit:true}:null; }
   if(P.level>=0||P.mode!=='walk') return null; let best=null,bd=7,bx=null,bs=null,bn=null; for(const R of ROOMS){ if(R.era!==MODE) continue; for(const X of [{exitPos:R.exitPos},...(R.extra||[])]){ const E=X.exitPos,d=Math.hypot(P.x-E[0],P.z-E[1]); if(d<bd){ bd=d; best=R; bx=E; bs=X.spawn; bn=X.spawn?X.name:null; } } }
@@ -3161,10 +3165,12 @@ for(const c of [mapCM,mapCE]){ const x=c.getContext('2d'); x.fillStyle='#d2452c'
 const miniC=$('miniC'),mini2=miniC.getContext('2d');
 /* 小さな地図: iPhone の Safari は、元の絵からはみ出す範囲を drawImage で切り出すと何も描かない（黒くなる）ことがあるので、はみ出さない範囲だけを切り出して描く。
    画面を回したときに canvas を作り直して黒くなるのを防ぐため、canvas は大きくするときだけ作り直す */
-function drawMini(){ const r=miniC.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),need=Math.max(2,Math.round(r.width*dpr)); if(miniC.width<need){ miniC.width=miniC.height=need; } const S=miniC.width;
+function drawMini(){ const r=miniC.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),need=Math.max(2,Math.round(r.width*dpr)); if(miniC.width<need||miniC.height!==miniC.width){ miniC.width=miniC.height=Math.max(need,miniC.width); } const S=miniC.width;
   const span=170*GS,cx=((P.room?P.room.door[0]:P.x)-DX0)*GS,cz=((P.room?P.room.door[1]:P.z)-DZ0)*GS,sx=cx-span/2,sy=cz-span/2,k=S/span,MW_=mapC.width,MH_=mapC.height; mini2.fillStyle='#5a5852'; mini2.fillRect(0,0,S,S);
   const ix0=Math.max(0,sx),iy0=Math.max(0,sy),ix1=Math.min(MW_,sx+span),iy1=Math.min(MH_,sy+span); if(ix1-ix0>1&&iy1-iy0>1){ try{ mini2.drawImage(mapC,ix0,iy0,ix1-ix0,iy1-iy0,(ix0-sx)*k,(iy0-sy)*k,(ix1-ix0)*k,(iy1-iy0)*k); }catch(e){} }
-  mini2.save(); mini2.translate(S/2,S/2); mini2.rotate(-P.yaw); mini2.fillStyle='#fff'; mini2.strokeStyle='#d2452c'; mini2.lineWidth=2*dpr; mini2.beginPath(); mini2.moveTo(0,-9*dpr); mini2.lineTo(6*dpr,7*dpr); mini2.lineTo(0,3*dpr); mini2.lineTo(-6*dpr,7*dpr); mini2.closePath(); mini2.fill(); mini2.stroke(); mini2.restore(); }
+  if(!P.room&&P.level<0) for(const e of DOORPTS){ if(e.era!==MODE) continue; const ex=((e.x-DX0)*GS-sx)*k,ey=((e.z-DZ0)*GS-sy)*k; if(ex<-6||ey<-6||ex>S+6||ey>S+6) continue; const r=(e.big?3.8:2.4)*dpr; mini2.fillStyle='#e8b84a'; mini2.strokeStyle='#1b1308'; mini2.lineWidth=1.4*dpr; mini2.fillRect(ex-r,ey-r,2*r,2*r); mini2.strokeRect(ex-r,ey-r,2*r,2*r); }
+  const pul=.5+.5*Math.sin(performance.now()/260); mini2.save(); mini2.translate(S/2,S/2); mini2.fillStyle='rgba(210,69,44,'+(.18+.22*pul)+')'; mini2.beginPath(); mini2.arc(0,0,(13+4*pul)*dpr,0,6.283); mini2.fill(); mini2.fillStyle='rgba(255,255,255,.95)'; mini2.strokeStyle='#111'; mini2.lineWidth=1.5*dpr; mini2.beginPath(); mini2.arc(0,0,9*dpr,0,6.283); mini2.fill(); mini2.stroke();
+  mini2.rotate(-P.yaw); mini2.fillStyle='#d2452c'; mini2.strokeStyle='#5a0f05'; mini2.lineWidth=1.2*dpr; mini2.beginPath(); mini2.moveTo(0,-12*dpr); mini2.lineTo(6.5*dpr,5*dpr); mini2.lineTo(0,1.5*dpr); mini2.lineTo(-6.5*dpr,5*dpr); mini2.closePath(); mini2.fill(); mini2.stroke(); mini2.restore(); }
 let MAPR={x0:-340,x1:560,z0:-330,z1:330};
 function drawMap(){ const c=$('mapC'),r=c.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1); c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
   const g=c.getContext('2d'); g.drawImage(mapC,(MAPR.x0-DX0)*GS,(MAPR.z0-DZ0)*GS,(MAPR.x1-MAPR.x0)*GS,(MAPR.z1-MAPR.z0)*GS,0,0,c.width,c.height);
