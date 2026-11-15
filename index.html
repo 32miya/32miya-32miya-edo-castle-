@@ -1834,6 +1834,21 @@ function artMat(A,t,gold){ return std(gold?{map:t,emissiveMap:t,emissive:new THR
 function artHalves(file,fill){ const cs=[makeCanvas(256,512),makeCanvas(256,512)],ts=cs.map(c=>{ const g=c.getContext('2d'); g.fillStyle=fill; g.fillRect(0,0,256,512); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; return t; });
   const im=new Image(); im.onload=()=>{ cs.forEach((c,i)=>{ const w=im.width/2; c.getContext('2d').drawImage(im,i*w,0,w,im.height,0,0,256,512); ts[i].needsUpdate=true; }); }; im.src='/oshiro/common/assets/tex/'+file+'.webp'; return ts; }
 for(const [k,file] of [['kmMatsu','km_fs_matsu'],['kmSakura','km_fs_sakura'],['kmSakura2','km_fs_sakura2']]){ const ts=artHalves(file,'#c9a64a'); addMat(k+'L',artMat(null,ts[0],1)); addMat(k+'R',artMat(null,ts[1],1)); }
+/*EDART*/
+/* 江戸城の障壁画・格天井・蒔絵の調度（共通素材 tex/ed_*.webp）。4面の絵を襖4枚に1面ずつ。読み込めるまでは無地 */
+function artN(file,n,fill){ const cs=[],ts=[]; for(let i=0;i<n;i++){ const c=makeCanvas(256,512),g=c.getContext('2d'); g.fillStyle=fill; g.fillRect(0,0,256,512); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; cs.push(c); ts.push(t); }
+  const im=new Image(); im.onload=()=>{ cs.forEach((c,i)=>{ const w=im.width/n; const g=c.getContext('2d'); g.drawImage(im,i*w,0,w,im.height,0,0,256,512); fusumaEdge(g); ts[i].needsUpdate=true; }); }; im.src='/oshiro/common/assets/tex/'+file+'.webp'; return ts; }
+function fusumaEdge(g){ g.strokeStyle='#1b130b'; g.lineWidth=8; g.strokeRect(4,4,248,504); g.fillStyle='#2a1f12'; g.beginPath(); g.ellipse(18,268,7,12,0,0,6.283); g.fill(); g.fillStyle='#c99a35'; g.beginPath(); g.ellipse(18,268,4,8,0,0,6.283); g.fill(); }
+const ED_FS={};
+for(const [k,file,gold] of [['edTora','ed_fs_tora',1],['edTaka','ed_fs_matsutaka',1],['edTeikan','ed_fs_teikan',1],['edAki','ed_fs_akikusa',0],['edShiki','ed_fs_shiki',1]]){
+  const ts=artN(file,4,gold?'#c9a64a':'#ece6d6'); ED_FS[k]=[]; ts.forEach((t,i)=>{ addMat(k+i,artMat(null,t,gold)); ED_FS[k].push(k+i); }); }
+for(const [k,file] of [['edAoiC','ed_tenjo_aoi'],['edBotanC','ed_tenjo_botan']]){ const A=artTex(file,512,512,'#b8913a'); addMat(k,std({map:A.t,emissiveMap:A.t,emissive:new THREE.Color(0xffffff),emissiveIntensity:.2,roughness:.45,metalness:.3})); }
+/* 蒔絵の調度（切り抜き）: [高さm, 幅/高さ] */
+const ED_MK={iko:[1.75,.96],tana:[1.15,.9],kyodai:[.85,.65],kaioke:[.42,1.46],bonbori:[1.05,.67],tebako:[.55,1.09],tansu:[.75,1.6]};
+for(const n in ED_MK){ const c=makeCanvas(512,512),t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; addMat('mk_'+n,std({map:t,transparent:true,alphaTest:.5,roughness:.4,metalness:.15,side:THREE.DoubleSide}));
+  const im=new Image(); im.onload=()=>{ c.getContext('2d').drawImage(im,0,0,512,512); t.needsUpdate=true; }; im.src='/oshiro/common/assets/tex/ed_mk_'+n+'.webp'; }
+/* 調度を壁ぎわに立てる（ry: 向き） */
+function mkItem(R,n,x,z,ry,y0){ const [h,a]=ED_MK[n]; rg(R,'mk_'+n,new THREE.PlaneGeometry(h*a,h),x,(y0||0)+h/2,z,ry||0); }
 for(const [k,file,w,h] of [['kmTsuru','km_fs_tsuru',256,512],['kmTake','km_fs_take',256,512],['kmByobu','km_byobu',1024,512]]){ const A=artTex(file,w,h,'#c9a64a'); addMat(k,artMat(A,A.t,1)); }
 /* ================= 城の部品 ================= */
 /* 巨石（蛸石・肥後石）: 一枚の大きな花崗岩 */
@@ -2573,15 +2588,15 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   const Z=[]; const zn=(x0,x1,z0,z1,name)=>Z.push([x0,x1,name,z0,z1]);
   /* ---------- 表 ---------- */
   /* 玄関（式台）と遠侍（将軍の警備にあたる御徒の詰所）、その奥の虎之間（本丸を警備する書院番の詰所。襖に竹虎の絵） */
-  zoneFloor(R,12,36,68,75,'woodGrain',0,3); zoneFloor(R,12,36,30,68,'tatami'); zn(12,36,68,75,'本丸御殿 玄関（式台）'); zn(12,36,48,68,'表 遠侍（御徒の詰所）'); zn(12,36,30,48,'表 虎之間（書院番の詰所）'); pw(R,'x',12,36,48,['tora'],[[21,27]],{step:2.4});
-  pw(R,'x',12,36,68,'woodGrain',[[20,28]],{y1:2.9}); pw(R,'z',30,75,12,['tora'],[[54,60]],{step:2.4}); fusumaWallR(R,12.2,35.8,30.2,67.8,['tora'],{noFront:true});
+  zoneFloor(R,12,36,68,75,'woodGrain',0,3); zoneFloor(R,12,36,30,68,'tatami'); zn(12,36,68,75,'本丸御殿 玄関（式台）'); zn(12,36,48,68,'表 遠侍（御徒の詰所）'); zn(12,36,30,48,'表 虎之間（書院番の詰所）'); pw(R,'x',12,36,48,ED_FS.edTora,[[21,27]],{step:2.4});
+  pw(R,'x',12,36,68,'woodGrain',[[20,28]],{y1:2.9}); pw(R,'z',30,75,12,ED_FS.edTora,[[54,60]],{step:2.4}); fusumaWallR(R,12.2,35.8,30.2,67.8,ED_FS.edTora,{noFront:true});
   zoneCeil(R,12,36,30,68,'woodGrain','tl_c_kikub'); zoneCeil(R,12,36,68,75,'woodGrain'); kugi(R,'x',12,36,48); kugi(R,'z',30,75,12);
   /* 大広間（約400畳。儀式や大名の年始の拝謁に使った。上段・中段・下段と二之間・三之間） */
   zoneFloor(R,-36,12,30,75,'tatami'); jodan(R,-36,-26,30,52,.42); rb(R,'tatami',-26,-14,0,.2,30,52,false,1.8); R.steps.push({x0:R.ox-26,x1:R.ox-14,z0:R.oz+30,z1:R.oz+52,h:.2});
   zn(-36,-26,30,52,'表 大広間（上段之間）'); zn(-26,-14,30,52,'表 大広間（中段之間）'); zn(-14,12,30,52,'表 大広間（下段之間）'); zn(-36,-12,52,75,'表 大広間（二之間）'); zn(-12,12,52,75,'表 大広間（三之間）');
-  pw(R,'x',-36,12,52,['kmMatsuL','kmMatsuR'],[[-30,-20],[-6,4]],{step:2.2}); pw(R,'z',52,75,-12,['tl_f_matsu'],[[60,66]]);
-  fusumaWallR(R,-35.8,11.8,30.2,74.8,['kmMatsuL','kmMatsuR','fsShoL','fsShoR'],{noFront:true});
-  zoneCeil(R,-36,-26,30,52,'kinpaku','tl_c_goldgrid'); zoneCeil(R,-26,-14,30,52,'kinpaku','tl_c_kacho'); zoneCeil(R,-14,12,30,75,'woodGrain','tl_c_kiriw'); zoneCeil(R,-36,-14,52,75,'woodGrain','tl_c_kiriw');
+  pw(R,'x',-36,12,52,ED_FS.edTaka,[[-30,-20],[-6,4]],{step:2.2}); pw(R,'z',52,75,-12,['tl_f_matsu'],[[60,66]]);
+  fusumaWallR(R,-35.8,11.8,30.2,74.8,ED_FS.edTaka,{noFront:true});
+  zoneCeil(R,-36,-26,30,52,'kinpaku','edAoiC'); zoneCeil(R,-26,-14,30,52,'kinpaku','tl_c_kacho'); zoneCeil(R,-14,12,30,75,'woodGrain','tl_c_kiriw'); zoneCeil(R,-36,-14,52,75,'woodGrain','tl_c_kiriw');
   tokonoma(R,-31,30.2,6,1,3,'kmTsuru'); chigaidana(R,-27.4,30.2,2.4,.9); tsukeshoin(R,-35.2,40,1.2); kugi(R,'x',-36,12,52); kugi(R,'z',52,75,-12); kugi(R,'x',-36,36,30); kugi(R,'x',-36,36,24);
   /* 松之大廊下（大広間と白書院を結ぶ長い廊下。襖に浜辺の松と千鳥。のちの元禄14年（1701）、浅野内匠頭が吉良上野介に斬りつけた所） */
   zoneFloor(R,-36,36,24,30,'floor',0,3); zn(-36,36,24,30,'表 松之大廊下');
@@ -2589,19 +2604,19 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   /* 白書院（将軍が大名と対面する格式の高い書院。上段・下段・連歌之間・帝鑑之間） */
   zoneFloor(R,4,36,-2,24,'tatami'); jodan(R,22,36,-2,10,.38); zn(22,36,-2,10,'表 白書院（上段之間）'); zn(4,22,-2,24,'表 白書院（下段之間）'); zn(22,36,10,24,'表 白書院（連歌之間）');
   pw(R,'z',-2,24,22,['fsMokL','fsMokR'],[[12,18]],{step:2.2}); pw(R,'z',-2,24,4,['tl_w_tsurumatsu'],[[6,12]]); fusumaWallR(R,4.2,35.8,-1.8,23.8,['tl_w_tsurumatsu','fsMokL','fsMokR'],{noFront:true});
-  zoneCeil(R,22,36,-2,10,'kinpaku','tl_c_houou'); zoneCeil(R,4,22,-2,24,'woodGrain','tl_c_kikub'); zoneCeil(R,22,36,10,24,'woodGrain','tl_c_kikub'); tokonoma(R,30,-1.8,5,1,3,'kmTsuru'); chigaidana(R,25.6,-1.8,2.6,.9); kugi(R,'z',-2,24,22); kugi(R,'z',-2,24,4);
+  zoneCeil(R,22,36,-2,10,'kinpaku','edAoiC'); zoneCeil(R,4,22,-2,24,'woodGrain','tl_c_kikub'); zoneCeil(R,22,36,10,24,'woodGrain','tl_c_kikub'); tokonoma(R,30,-1.8,5,1,3,'kmTsuru'); chigaidana(R,25.6,-1.8,2.6,.9); kugi(R,'z',-2,24,22); kugi(R,'z',-2,24,4);
   /* 大名の詰所（殿席）: 登城した大名が家格ごとに控えた部屋。帝鑑之間・柳之間など */
   zoneFloor(R,-36,4,-2,24,'tatami'); zn(-36,-16,-2,24,'表 帝鑑之間（大名の詰所）'); zn(-16,4,-2,24,'表 柳之間（大名の詰所）');
-  pw(R,'z',-2,24,-16,['fsShoL','fsShoR'],[[12,18]],{step:2.2}); fusumaWallR(R,-35.8,3.8,-1.8,23.8,['fsShoL','fsShoR','kmMatsuL','kmMatsuR'],{noFront:true}); zoneCeil(R,-36,4,-2,24,'woodGrain','tl_c_kikub'); kugi(R,'z',-2,24,-16);
+  pw(R,'z',-2,24,-16,ED_FS.edTeikan,[[12,18]],{step:2.2}); fusumaWallR(R,-35.8,3.8,-1.8,23.8,ED_FS.edTeikan,{noFront:true}); zoneCeil(R,-36,4,-2,24,'woodGrain','tl_c_kikub'); kugi(R,'z',-2,24,-16);
   /* ---------- 白書院の北: 黒書院（竹之廊下でつながる）と中奥 ---------- */
   pw(R,'x',-36,36,-2,['tl_f_sansui','suiboku'],[[-26,-20],[-6,0],[8,14]],{step:2}); /* 表と、黒書院・中奥の境 */
   zoneFloor(R,-36,36,-30,-2,'tatami');
   /* 黒書院（日常の対面に使った書院。素木の柱と水墨の襖で落ち着いた造り） */ jodan(R,22,36,-30,-18,.36); zn(22,36,-30,-18,'表 黒書院（上段之間）'); zn(4,36,-30,-2,'表 黒書院');
   zoneFloor(R,4,36,-6,-2,'floor',.01,3); zn(4,36,-6,-2,'表 竹之廊下・黒書院');
-  pw(R,'z',-30,-2,4,['suiboku'],[[-12,-6]]); fusumaWallR(R,4.2,35.8,-29.8,-2.2,['suiboku','tl_f_sansui'],{noFront:true}); zoneCeil(R,4,36,-30,-2,'woodGrain','tl_c_wood'); tokonoma(R,28,-29.8,5,1,3);
+  pw(R,'z',-30,-2,4,ED_FS.edAki,[[-12,-6]]); fusumaWallR(R,4.2,35.8,-29.8,-2.2,ED_FS.edAki,{noFront:true}); zoneCeil(R,4,36,-30,-2,'woodGrain','tl_c_wood'); tokonoma(R,28,-29.8,5,1,3);
   /* 中奥: 御座之間（将軍が日常に政務をとり、老中らと会う部屋）と御休息之間（将軍の居間・寝所） */
   jodan(R,-36,-26,-30,-16,.36); zn(-36,-26,-30,-16,'中奥 御座之間（上段）'); zn(-36,-14,-30,-2,'中奥 御座之間'); zn(-14,4,-30,-2,'中奥 御休息之間');
-  pw(R,'z',-30,-2,-14,['tl_f_take','suiboku'],[[-18,-12]]); fusumaWallR(R,-35.8,3.8,-29.8,-2.2,['tl_f_take','suiboku','tl_f_sansui'],{noFront:true}); zoneCeil(R,-36,-14,-30,-2,'woodGrain','tl_c_navykiku'); sao(R,-14,4,-30,-2); tokonoma(R,-33,-29.8,5,1,3,'kmTake');
+  pw(R,'z',-30,-2,-14,ED_FS.edAki,[[-18,-12]]); fusumaWallR(R,-35.8,3.8,-29.8,-2.2,ED_FS.edAki,{noFront:true}); zoneCeil(R,-36,-14,-30,-2,'woodGrain','tl_c_navykiku'); sao(R,-14,4,-30,-2); tokonoma(R,-33,-29.8,5,1,3,'kmTake');
   /* 中奥と大奥の境: 銅の塀。御鈴廊下だけが通じる */
   pw(R,'x',-36,36,-30,'darkwood',[[-24,-20]],{step:3,upper:'darkwood'});
   /* ---------- 御鈴廊下と中庭 ---------- */
@@ -2617,9 +2632,10 @@ function jodan(R,x0,x1,z0,z1,hh){ rb(R,'tatami',x0,x1,0,hh||.4,z0,z1,false,1.8);
   zoneFloor(R,-36,12,-75,-42,'tatami'); zoneFloor(R,12,36,-75,-42,'tatami');
   /* 御鈴番所（大奥側の詰所。将軍のお成りを待つ女中が控えた） */ zn(-30,-14,-48,-42,'大奥 御鈴番所'); zoneCeil(R,-36,12,-48,-42,'woodGrain'); pw(R,'x',-36,12,-48,['tl_f_sakura','hanaF'],[[-24,-20],[-4,0]]);
   /* 御小座敷（将軍が大奥に泊まるときの寝所） */ zn(-36,-16,-62,-48,'大奥 御殿向 御小座敷'); pw(R,'z',-62,-48,-16,['kmSakuraL','kmSakuraR'],[[-56,-52]]); jodan(R,-36,-26,-62,-48,.3); zoneCeil(R,-36,-16,-62,-48,'woodGrain','tl_c_red');
-  /* 御台所の御座所（将軍の正室の居間。上段・中段・下段が続き、上段には床・違い棚・付書院。表の勇ましい松や虎ではなく、四季の草花を描いた金地の襖と花の格天井、蒔絵の長押で、公家の雅を取り入れた造り） */ zn(-16,-8,-66,-48,'大奥 御殿向 御台所の御座所（上段）'); zn(-8,0,-66,-48,'大奥 御殿向 御台所の御座所（中段）'); zn(0,12,-66,-48,'大奥 御殿向 御台所の御座所（下段）'); jodan(R,-16,-8,-66,-48.2,.42); rb(R,'tatami',-8,0,0,.2,-66,-48.2,false,1.8); R.steps.push({x0:R.ox-8,x1:R.ox,z0:R.oz-66,z1:R.oz-48.2,h:.2}); zoneCeil(R,-16,-8,-66,-48,'kinpaku','tl_c_kacho'); zoneCeil(R,-8,12,-66,-48,'kinpaku','tl_c_kirimon');
+  /* 御台所の御座所（将軍の正室の居間。上段・中段・下段が続き、上段には床・違い棚・付書院。表の勇ましい松や虎ではなく、四季の草花を描いた金地の襖と花の格天井、蒔絵の長押で、公家の雅を取り入れた造り） */ zn(-16,-8,-66,-48,'大奥 御殿向 御台所の御座所（上段）'); zn(-8,0,-66,-48,'大奥 御殿向 御台所の御座所（中段）'); zn(0,12,-66,-48,'大奥 御殿向 御台所の御座所（下段）'); jodan(R,-16,-8,-66,-48.2,.42); rb(R,'tatami',-8,0,0,.2,-66,-48.2,false,1.8); R.steps.push({x0:R.ox-8,x1:R.ox,z0:R.oz-66,z1:R.oz-48.2,h:.2}); zoneCeil(R,-16,-8,-66,-48,'kinpaku','edBotanC'); zoneCeil(R,-8,12,-66,-48,'kinpaku','edBotanC');
   tokonoma(R,-12.6,-65.8,4,.9,3,'kmUme'); chigaidana(R,-9.2,-65.8,2.2,.8); tsukeshoin(R,-15.2,-60,1.2); for(const zz of [-65.9,-48.3]) rb(R,'gold',-16,12,2.98,3.02,zz-.06,zz+.06);
-  fusumaWallR(R,-15.8,11.8,-65.8,-48.2,['kmSakuraL','kmSakuraR','kmUme','hanaF','kmSakura2L','kmSakura2R','kmKiri'],{noFront:true}); pw(R,'x',-16,12,-66,['kmSakura2L','kmSakura2R','hanaF'],[[2,6]]);
+  fusumaWallR(R,-15.8,11.8,-65.8,-48.2,ED_FS.edShiki,{noFront:true}); pw(R,'x',-16,12,-66,ED_FS.edShiki,[[2,6]]);
+  /* 蒔絵の調度（三つ葉葵と花の蒔絵）: 鏡台・棚・雪洞・衣桁に掛けた打掛・箪笥・手箱・貝桶 */ mkItem(R,'kyodai',-5.5,-65.3,0,.2); mkItem(R,'tana',-2.5,-65.3,0,.2); mkItem(R,'bonbori',.8,-65,0); mkItem(R,'iko',8.6,-65.2,0); mkItem(R,'tansu',10.8,-65.3,0); mkItem(R,'tebako',11.6,-55.2,-Math.PI/2); mkItem(R,'kaioke',11.6,-52.4,-Math.PI/2);
   /* 御仏間（歴代の将軍の位牌をまつり、御台所が毎朝拝んだ）と御対面所 */ zn(-36,-16,-75,-62,'大奥 御殿向 御仏間'); pw(R,'x',-36,-16,-62,['tl_f_kumo2'],[[-24,-20]]); zoneCeil(R,-36,-16,-75,-62,'kinpaku','tl_c_goldgrid');
   /* 御化粧之間 */ zn(-16,12,-75,-66,'大奥 御殿向 御化粧之間'); pw(R,'z',-75,-62,-16,['tl_f_sakura'],[[-70,-66]]); zoneCeil(R,-16,12,-75,-66,'woodGrain');
   /* 御殿向と長局向の境（廊下で通じる） */ pw(R,'z',-75,-42,12,['tl_f_green','tl_f_kumo'],[[-46,-43],[-60,-57],[-72,-69]]);
@@ -3379,7 +3395,7 @@ for(const [s,x,y,z] of DECO_KEEP){ if(!decoT.add(s,x,y,z,{})) edoPut(KXI,s,x,y,z
   rp(G,'lady_walk',-22,0,-40.5,{},false,['御鈴番の女中','上様のお成りのときは、鈴を鳴らして御錠口を開けます。']); rp(G,'az_nyobo',-26,0,-45,{},true,['大奥の女中','ここから先は大奥。男子禁制でございます。']);
   rp(G,'i_byobu_sakura',-30,.3,-61.4,{yaw:0,h:1.6}); rp(G,'i_bonbori',-35,.3,-50); rp(G,'i_bonbori',-17,0,-50); rp(G,'i_andon_makie',-20,0,-60);
   rp(G,'kuge_g',-10,.42,-62,{},true,['御台所（想像）','わたくしは京の公家から嫁いでまいりました。大奥のことは、わたくしが取りしきります。']); rp(G,'lady_tray',-2,0,-56,{},true,['御中臈','御台所さまにお茶をお持ちしました。']);
-  rp(G,'az_nyobo',4,0,-60,{flip:true},true,['御年寄','大奥のきまりは厳しゅうございます。']); rp(G,'i_kazaridana',8,0,-64.5); rp(G,'i_byobu_fuji',-11,.42,-65.4,{yaw:0,h:1.7}); rp(G,'i_koro_kin',-7,.42,-60);
+  rp(G,'az_nyobo',4,0,-60,{flip:true},true,['御年寄','大奥のきまりは厳しゅうございます。']);  rp(G,'i_byobu_fuji',-11,.42,-65.4,{yaw:0,h:1.7}); rp(G,'i_koro_kin',-7,.42,-60);
   rp(G,'i_zushi',-26,0,-74,{},true); rp(G,'i_koro_kin',-26,0,-72); rp(G,'lady_walk',-20,0,-68,{flip:true},true,['女中','御仏間には、歴代の上様のご位牌をおまつりしております。']);
   rp(G,'i_kyodai',0,0,-73.6,{},true); rp(G,'i_tansu_shu',8,0,-74,{},true); rp(G,'i_tansu_kuro',-10,0,-74,{},true); rp(G,'lady_tray2',4,0,-70,{},true,['御化粧之間の女中','御台所さまのお髪を結い上げるのも、わたしたちの務め。']);
   const NGS=[['onna_b','春日局（想像）','わたしは上様（家光公）の乳母。大奥のきまりを定め、上様をお支えしてまいりました。'],['az_nyobo','長局の女中','長局は女中の住まい。身分によって部屋の広さがちがいます。'],['lady_tray','部屋方の女中','わたしは御中臈さまの部屋の者。お部屋のお世話をしております。'],['musume_r','見習いの娘','行儀見習いに上がりました。大奥のしきたりは覚えることばかり。'],['az_nyobo','御右筆','大奥の文書はわたしたちが書きます。']];
