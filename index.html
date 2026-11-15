@@ -2551,9 +2551,45 @@ for(const [x,z,ry] of [[346,-87,Math.PI/2],[(-96-30)/2,206,0]]){ gate(x,z,4.4,ry
 /* 日本橋の町人地: 通りに面して商家が並ぶ（日本橋は慶長8年（1603）に架けられ、五街道の起点とされた） */
 for(const z of [-128,-42,42,126,232]) for(const [a0,a1] of [[458,470],[490,560]]){ machiRow(a0+2,a1-2,z-2,'x',-1,rnd()<.35); machiRow(a0+2,a1-2,z+8+2,'x',1,rnd()<.35); }
 for(const z of [-120,-80,-40,0,40,80,120,160,200,240,280]){ if(z>-40&&z<0) continue; simpleRow('edo',462,558,z+2,'x',1); }
-for(const z of [-232,-200,-170]) simpleRow('edo',356,556,z,'x',1);
+for(const z of [-232,-200,-170]) simpleRow('edo',356,462,z,'x',1); /* その東は元吉原 */
 /* 日本橋のたもとの高札場と魚河岸（想像の配置） */
 { BE.darkwood.add(new THREE.BoxGeometry(8,.3,.4),TM(500,3,-133)); for(const s of [-1,1]) BE.darkwood.add(new THREE.BoxGeometry(.3,3,.3),TM(500+s*3.8,1.5,-133)); BE.roof.add(gableRoofGeo(8.6,1.6,.6,.3,.2),TM(500,3.1,-133)); BE.woodGrain.add(new THREE.BoxGeometry(7.4,1.6,.1),TM(500,2.1,-132.9)); block(495.6,-133.4,504.4,-132.6,'machi'); }
+/* ---- 元吉原（吉原遊廓）: 元和3年（1617）に幕府が許し、日本橋の北東（葺屋町、いまの日本橋人形町）に開かれた遊廓。
+   まわりを堀と塀で囲み、出入りは大門ひとつ。中央の通りが仲之町、両側に江戸町・京町・角町などの町。
+   明暦の大火（1657）で焼け、浅草の北（新吉原）へ移った。この地図では位置を縮めて、日本橋川の北に置く（建物の形は想像） ---- */
+const YW={x0:472,x1:550,z0:-253,z1:-167,gx:511,gw:6,st:[[-195,-189],[-225,-219]],nk:[506,516]},MISE=[];
+function mise(cx,cz,ry,w,d){ const M0=TM(cx,0,cz,ry),h1=3,h=5.9,hw=(w-.15)/2,F=d/2,BENI=new THREE.Color('#8e2b1e');
+  addM(B.machiya,machiyaBoxGeo(w-.15,h,d),M0,TM(0,h/2,0)); addM(B.shingle,gableRoofGeo(w-.15,d,1.6,.9,.15),M0,TM(0,h,0)); addM(B.plaster,gableEndsGeo(w-.15,d,1.6),M0,TM(0,h,0));
+  /* 1階の庇 */ const v=[],uv=[]; quad(v,uv,[-hw,h1-.35,F+1.2],[hw,h1-.35,F+1.2],[hw,h1+.1,F],[-hw,h1+.1,F],w/2.2,.6); addM(B.shingle,geoFrom(v,uv),M0,new THREE.Matrix4());
+  addM(B.stone,boxUVGeo(w-.1,.22,.34,1.2,1.2),M0,TM(0,.11,F+.1)); for(const sx of [-1,1]) addM(B.darkwood,new THREE.BoxGeometry(.24,h-.1,.24),M0,TM(sx*(hw-.08),(h-.1)/2,F+.08));
+  /* 1階: 入口と紅殻格子（見世の格子） */ const ent=1.7,eo=(rnd()<.5?-1:1)*Math.min(hw-1.4,1.2+rnd()); MISE.push({cx,cz,ry,w,d,eo,F});
+  addM(B.darkwood,new THREE.BoxGeometry(ent,2.3,.04),M0,TM(eo,1.2,F+.03));
+  for(let x=-hw+.3;x<hw-.25;x+=.2){ if(Math.abs(x-eo)<ent/2+.05) continue; addM(B.darkwood,new THREE.BoxGeometry(.07,2.4,.08),M0,TM(x,1.35,F+.12),BENI); }
+  for(const yy of [.22,2.55]) addM(B.darkwood,new THREE.BoxGeometry(w-.4,.1,.12),M0,TM(0,yy,F+.12),BENI);
+  addM(B.noren,new THREE.PlaneGeometry(ent*.95,1),M0,TM(eo,1.95,F+.14),new THREE.Color(pick(['#6e2d24','#26406a','#4a3a52','#2f3a4e'])));
+  /* 2階: 障子と紅殻の手すり */ addM(B.plaster,boxUVGeo(w-.8,1.5,.06,2,1),M0,TM(0,h1+1.25,F+.02),new THREE.Color('#efe6cf'));
+  for(let x=-hw+.4;x<hw-.3;x+=.9) addM(B.darkwood,new THREE.BoxGeometry(.06,1.5,.08),M0,TM(x,h1+1.25,F+.06));
+  addM(B.darkwood,new THREE.BoxGeometry(w-.3,.1,.1),M0,TM(0,h1+.85,F+.45),BENI); addM(B.darkwood,new THREE.BoxGeometry(w-.3,.08,.5),M0,TM(0,h1+.25,F+.25),BENI);
+  for(let x=-hw+.3;x<hw-.2;x+=.45) addM(B.darkwood,new THREE.BoxGeometry(.05,.6,.05),M0,TM(x,h1+.55,F+.45),BENI);
+  const rot=Math.abs(Math.sin(ry))>.5,bw=rot?d:w,bd=rot?w:d; block(cx-bw/2,cz-bd/2,cx+bw/2,cz+bd/2,'machi'); }
+function miseRow(a0,a1,front,axis,dir){ let a=a0; while(a1-a>4){ let w=6+rnd()*3; if(a1-a-w<4) w=a1-a; const d=11;
+    if(axis==='x') mise(a+w/2,front-dir*d/2,dir>0?0:Math.PI,w,d); else mise(front-dir*d/2,a+w/2,dir>0?Math.PI/2:-Math.PI/2,w,d); a+=w+.05; } }
+{ const {x0,x1,z0,z1,gx,gw}=YW,H=2.4,t=.18,ditch='#25363a';
+  /* 仲之町の両側（江戸町・京町）と、横町の両側（角町など） */
+  const segs=[[z0+1,YW.st[1][0]],[YW.st[1][1],YW.st[0][0]],[YW.st[0][1],z1-1]];
+  for(const [a,b] of segs){ miseRow(a+.5,b-.5,YW.nk[0],'z',1); miseRow(a+.5,b-.5,YW.nk[1],'z',-1); }
+  for(const [za,zb] of YW.st){ miseRow(x0+1,YW.nk[0]-11.5,za,'x',1); miseRow(x0+1,YW.nk[0]-11.5,zb,'x',-1); miseRow(YW.nk[1]+11.5,x1-1,za,'x',1); miseRow(YW.nk[1]+11.5,x1-1,zb,'x',-1); }
+  /* 黒板塀（南は大門のところだけ開く） */
+  const fence=(ax,az,bx,bz)=>{ const L=Math.hypot(bx-ax,bz-az),c=[(ax+bx)/2,(az+bz)/2],ry=Math.atan2(bx-ax,bz-az)-Math.PI/2; B.darkwood.add(new THREE.BoxGeometry(L,H,t),TM(c[0],H/2,c[1],ry)); B.roof.add(new THREE.BoxGeometry(L,.12,.7),TM(c[0],H+.06,c[1],ry));
+    for(let s=0;s<=L;s+=2.4){ const k=s/L; B.darkwood.add(new THREE.BoxGeometry(.2,H+.1,.3),TM(ax+(bx-ax)*k,(H+.1)/2,az+(bz-az)*k,ry)); } block(Math.min(ax,bx)-t,Math.min(az,bz)-t,Math.max(ax,bx)+t,Math.max(az,bz)+t,'machi'); };
+  fence(x0,z0,x1,z0); fence(x0,z0,x0,z1); fence(x1,z0,x1,z1); fence(x0,z1,gx-gw/2,z1); fence(gx+gw/2,z1,x1,z1);
+  /* まわりの堀（大門の前は橋） */ const D=(a,b,c,d)=>{ B.darkwood.add(new THREE.BoxGeometry(c-a,.06,d-b),TM((a+c)/2,.02,(b+d)/2),new THREE.Color(ditch)); block(a,b,c,d,'machi'); };
+  D(x0-3.2,z0-3.2,x1+3.2,z0-.8); D(x0-3.2,z0-.8,x0-.8,z1+3.2); D(x1+.8,z0-.8,x1+3.2,z1+3.2); D(x0-.8,z1+.8,gx-2.4,z1+3.2); D(gx+2.4,z1+.8,x1+.8,z1+3.2);
+  B.woodGrain.add(new THREE.BoxGeometry(4.6,.25,3),TM(gx,.13,z1+2)); for(const s of [-1,1]) B.darkwood.add(new THREE.BoxGeometry(.15,.6,3),TM(gx+s*2.3,.4,z1+2));
+  /* 大門（冠木門） */ gate(gx,z1,gw,0,{y:0,h:5,par:GE});
+  /* 仲之町の天水桶と、大門の脇の番所（四郎兵衛会所はのちの新吉原のもの。ここは想像の番所） */
+  for(const z of [-175,-205,-235]) for(const x of [YW.nk[0]+.6,YW.nk[1]-.6]){ B.darkwood.add(new THREE.CylinderGeometry(.38,.4,.7,12),TM(x,.35,z)); block(x-.4,z-.4,x+.4,z+.4,'machi'); }
+}
 B=BS; curSet=BSETS.shared;
 /* ================= 中に入れる建物 ================= */
 B=BE;
@@ -2725,6 +2761,10 @@ B=BE;
   for(let k=0;k<3;k++) rb(R,'darkwood',-3.6+k*1.3,-2.6+k*1.3,0,.5,-d/2+.2,-d/2+.8,true);
   addDoors(R,YAGURA.filter(y=>ygPar(y,'edo')).map(y=>ygD(y,'edo')),{mark:true,w:1.2,h:2}); }
 B=BS;
+/* 元吉原の揚屋（遊女を呼んで客をもてなした家。元吉原では客は揚屋に上がり、遊女が揚屋へ出向いた。中のようすは想像） */
+{ const m=MISE.filter(q=>Math.abs(q.ry-Math.PI/2)<.01).sort((a,b)=>b.cz-a.cz)[0]; const R=RD.ageya=mkRoom(Object.assign({era:'edo'},doorAt(m.cx+m.F+.05,m.cz-m.eo,1,0),roomTxt('揚屋の座敷（元吉原）','あげや の ざしき','元吉原の揚屋。客はまず揚屋に上がり、そこへ遊女が呼ばれてきました。位の高い遊女は「太夫」とよばれ、和歌・書・琴・茶の湯などの教養も身につけていました（座敷のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']])));
+  const w=10,d=9,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'plIn',front:'tl_f_shoji',ceil:'woodGrain',door:1.6,doorMat:'noren',lamps:2});
+  rb(R,'kinpaku',-w/2+.05,-w/2+.12,.4,2.6,-3,3); rb(R,'darkwood',-w/2+.1,-w/2+1,0,.25,-1.5,1.5,true); rb(R,'woodGrain',w/2-1.2,w/2-.1,0,.12,-d/2+.2,-d/2+1.4); }
 B=BS;
 /* ================= 名所 ================= */
 const SPOTS=[
@@ -2807,7 +2847,9 @@ const SPOTS=[
    text:'大手門の前（いまの大手町・丸の内）に並んだ大名の上屋敷。寛永のころは、将軍の「御成」を迎えるため、唐破風と金の飾りの御成門を構えた屋敷もありました。中に入れます（屋敷の名と中のようすは想像）。',meta:[['場所','大名小路'],['焼失','明暦の大火（1657）']]},
   {id:'nihonbashi',name:'日本橋',kana:'にほんばし',at:[480,-143],pos:[480,-133],look:[480,4,-145],q:'Nihonbashi bridge Tokyo',
    text:'慶長8年（1603）に架けられ、五街道の起点とされた橋。いまの石の橋は明治44年（1911）のもので、上を首都高速道路が通ります。',meta:[['架橋','慶長8年（1603）'],['いまの橋','明治44年（1911）']],
-   edo:{text:'江戸の町人地のまん中、五街道の起点の橋。たもとには幕府のお触れを掲げる高札場があり、北岸には魚河岸が開かれてにぎわいました。'}}];
+   edo:{text:'江戸の町人地のまん中、五街道の起点の橋。たもとには幕府のお触れを掲げる高札場があり、北岸には魚河岸が開かれてにぎわいました。'}},
+  {id:'motoyoshiwara',name:'元吉原（吉原遊廓）',kana:'もとよしわら',at:[511,-210],pos:[511,-158],look:[511,4,-190],edoOnly:true,
+   text:'元和3年（1617）に幕府が許して開かれた遊廓。まわりを堀と塀で囲み、出入りは大門ひとつでした。中央の通りが仲之町で、両側に江戸町・京町・角町などの町が並びました。明暦の大火（1657）で焼け、浅草の北へ移って「新吉原」となります。いまの日本橋人形町のあたりで、「大門通り」という通りの名が残ります（この地図では位置を縮めています。建物と人のようすは想像）。',meta:[['開かれた年','元和3年（1617）'],['場所','葺屋町（いまの日本橋人形町）'],['移転','明暦の大火のあと浅草の北（新吉原）へ']]}];
 /* お城さんぽ共通（/oshiro/common/fuda.js の見どころ札・写真モード）へ、名所と自分の位置を知らせる窓口 */
 window.OshiroGame={ spots:()=>spotList(), all:()=>SPOTS, me:()=>({x:P.x,z:P.z,level:P.level,room:!!P.room,walk:P.mode==='walk',tour:typeof tour!=='undefined'&&!!tour.on}), started:()=>typeof started==='undefined'||!!started, warpAt:0 };
 { const _tp=teleport; teleport=function(s){ window.OshiroGame.warpAt=performance.now(); return _tp.apply(this,arguments); }; }
@@ -2821,6 +2863,7 @@ function areaAt(x,z){ const e=MODE==='edo';
       if(e){ if(z<-56) return '本丸（大奥の外）'; return '本丸（御殿のまわり）'; } return z<-60?'本丸（大奥の跡）':'本丸（大芝生）'; }
     if(p.id==='shimo') return x<96?'中之門・大番所':x>176?'大手三之門の内':'百人番所の前'; if(p.id==='sanno') return z>60&&x>270?'大手門の内（三の丸）':'三の丸';
     if(p.id==='nino'||p.id==='nino2') return e?'二の丸':'二の丸（庭園）'; return p.name; }
+  if(e&&x>468&&x<554&&z<-160&&z>-258) return z>-168?'元吉原の大門':'元吉原（吉原遊廓）';
   if(x>332){ if(e) return z<-136?'神田（日本橋川の北）':x>452?'日本橋の町人地':'大名小路（大手前の大名屋敷）'; return x>460&&z>170?'東京駅のまえ':'大手町・丸の内'; }
   if(z>168) return e?'西の丸下（大名屋敷）':'皇居外苑';
   if(z<-240) return e?'北の丸の外（神田のほう）':'北の丸の外';
@@ -2891,7 +2934,7 @@ function addRound(x,z,s,aut,cols){ const y=baseH(x,z),h=2.5*s; TS.TR.push([x,y+h
 const SAKURA=['#f1c6d0','#f4d3db','#eab7c4','#f7dfe4'];
 function addBlossom(x,z,s,cols){ const y=baseH(x,z),h=2.3*s; TS.TR.push([x,y+h/2,z,s,h,s]); const n=4+((rnd()*3)|0); for(let i=0;i<n;i++){ const a=rnd()*6.28,r=rnd()*1.5*s; TS.BL.push([x+Math.cos(a)*r,y+h+1*s+rnd()*1*s,z+Math.sin(a)*r,(1.5+rnd()*.7)*s,(1+rnd()*.5)*s,(1.5+rnd()*.7)*s,pick(cols)]); } }
 const onRoad=(x,z)=>ROADS.some(r=>inR(r,x,z,2))||actB().some(b=>inR(b,x,z,3))||SPOTS.some(s=>Math.hypot(s.pos[0]-x,s.pos[1]-z)<7||(s.edo&&s.edo.pos&&Math.hypot(s.edo.pos[0]-x,s.edo.pos[1]-z)<7));
-function okT(x,z){ return !hitBlock(x,z,2.5)&&!waterAt(x,z,2)&&!onRoad(x,z)&&!rampAt(x,z)&&!RAMPS.some(r=>inR(r,x,z,2.5)); }
+function okT(x,z){ if(MODE==='edo'&&x>466&&x<556&&z<-158&&z>-260) return false; return !hitBlock(x,z,2.5)&&!waterAt(x,z,2)&&!onRoad(x,z)&&!rampAt(x,z)&&!RAMPS.some(r=>inR(r,x,z,2.5)); }
 /* 木（両方の時代）: 吹上の森と、曲輪のふちから離れた所。石垣のきわ・石段・道は避ける */
 const edgeOK=(x,z,m)=>{ const p=platAt(x,z); if(!p) return !PLAT.some(q=>!q.mode&&rDist(q,x,z)<m); return x>p.x0+m&&x<p.x1-m&&z>p.z0+m&&z<p.z1-m; };
 TS=TSETS.both; MODE='edo';
@@ -3269,7 +3312,7 @@ const _sprMats=[];
 function sprMaterial(page){ const m=new THREE.MeshBasicMaterial({map:ATL.tex[page],alphaTest:.5,side:THREE.DoubleSide,toneMapped:false}); _sprMats.push(m);
   m.onBeforeCompile=sh=>{ sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 iPos; attribute vec2 iSize; attribute vec4 iUV; attribute float iYaw;')
     .replace('#include <uv_vertex>','vUv=vec2(iUV.x+(iSize.x<0.?(.5-position.x):(position.x+.5))*iUV.z, iUV.y+position.y*iUV.w);')
-    .replace('#include <project_vertex>',`vec3 rgt; if(iYaw<-50.){ vec3 dd=cameraPosition-iPos; dd.y=0.; dd=normalize(dd+vec3(1e-4,0.,0.)); rgt=vec3(dd.z,0.,-dd.x); } else rgt=vec3(cos(iYaw),0.,-sin(iYaw));
+    .replace('#include <project_vertex>',`vec3 rgt; if(iYaw<-50.){ vec3 vt=viewMatrix[3].xyz; vec3 camP=-vec3(dot(viewMatrix[0].xyz,vt),dot(viewMatrix[1].xyz,vt),dot(viewMatrix[2].xyz,vt)); vec3 dd=camP-iPos; dd.y=0.; dd=normalize(dd+vec3(1e-4,0.,0.)); rgt=vec3(dd.z,0.,-dd.x); } else rgt=vec3(cos(iYaw),0.,-sin(iYaw));
       vec3 wp=iPos+rgt*position.x*abs(iSize.x)+vec3(0.,position.y*iSize.y,0.); vec4 mvPosition=viewMatrix*vec4(wp,1.); gl_Position=projectionMatrix*mvPosition;`);
     /* 遠くで縮小されたとき、細い脚や槍が透けて消えないように不透明度を補う */
     sh.fragmentShader=sh.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n  { vec2 q=vUv*2048.; float lv=max(0.,.5*log2(max(dot(dFdx(q),dFdx(q)),dot(dFdy(q),dFdy(q))))); diffuseColor.a=min(1.,diffuseColor.a*(1.+lv*.35)); }'); };
@@ -3345,7 +3388,7 @@ function updateNPC(dt){ if(!GNPC.visible||!GE.visible) return; const rx=Math.cos
   for(const n of NPCS){ if(n.len<=0) continue; n.t+=n.spd*dt*n.dir; if(n.t>n.len){ n.t=n.len; n.dir=-1; } if(n.t<0){ n.t=0; n.dir=1; }
     const a=n.path[0],b=n.path[1],u=n.t/n.len,x=a[0]+(b[0]-a[0])*u,z=a[1]+(b[1]-a[1])*u; n.ph+=dt*n.spd*(n.spd>2?3:5); const mx=(b[0]-a[0])*n.dir,mz=(b[1]-a[1])*n.dir;
     const y=n.fixedY?n.y:withMode('edo',()=>groundH(x,z,n.lastY===undefined?n.y:n.lastY)); n.lastY=y; npcCrowd.move(n.it,x,y+Math.abs(Math.sin(n.ph))*.04,z,(mx*rx+mz*rz)<0); } }
-const decoRoomT=new Crowd(GE,300,true),decoRoomM=new Crowd(GM,200,true);
+const decoRoomT=new Crowd(GE,700,true),decoRoomM=new Crowd(GM,200,true);
 function rp(R,spr,x,y,z,o,solid,talk){ const C=R.era==='modern'?decoRoomM:decoRoomT; const it=C.add(spr,R.ox+x,R.y+y,R.oz+z,o)||edoPut(R.era==='modern'?GM:GE,spr,R.ox+x,R.y+y,R.oz+z,o); if(it&&solid){ const w=Math.max(.5,it.w*.4); R.boxes.push({x0:R.ox+x-w,x1:R.ox+x+w,z0:R.oz+z-.45,z1:R.oz+z+.45}); } if(it&&talk) TALK.push({it,name:talk[0],say:talk[1],era:R.era}); return it; }
 function standAt(par,x,y0,z,h,w,d,mat){ const m=mesh(new THREE.BoxGeometry(w||.7,h,d||.5),M[mat||'lacquer']); m.position.set(x,y0+h/2,z); par.add(m); return y0+h; }
 function rpS(R,spr,x,z,h,o,w,d,mat){ const y=standAt(R.era==='modern'?GM:GE,R.ox+x,R.y,R.oz+z,h,w,d,mat); return rp(R,spr,x,y-R.y,z,o); }
@@ -3377,8 +3420,24 @@ const TOWN_P=[['q_merchant','日本橋の商人','五街道はみなこの日本
 { let k=0; for(let j=0;j<48;j++){ const P2=TOWN_P[k++%TOWN_P.length],z0=[-128,-42,42,126,232][j%5]+3,x0=460+rnd()*70,x1=x0+20+rnd()*30; npc(P2[0],j%2?[[x1,z0],[x0,z0]]:[[x0,z0],[x1,z0]],.5+rnd()*.6,P2[1],P2[2]); }
   for(let j=0;j<14;j++){ const P2=TOWN_P[k++%TOWN_P.length],x=[456,476][j%2],z0=-120+rnd()*380; npc(P2[0],[[x,z0],[x,z0+40]],.5+rnd()*.5,P2[1],P2[2]); }
   for(let j=0;j<8;j++){ const P2=TOWN_P[k++%TOWN_P.length],x0=470+rnd()*20; npc(P2[0],[[x0,-133],[x0+6,-152]],.4,P2[1],P2[2]); } }
+const YLAN=[];
+/* 元吉原の人々（せりふは記録をふまえた想像） */
+{ const YP=[['q_merchant','見物の町人','吉原は大門ひとつ。出入りはここからだけじゃ。'],['sam_haori','客の侍','揚屋で太夫を待つのじゃ。歌も書もたしなむ、たいした人よ。'],['shonin','揚屋の若い衆','いらっしゃいまし。揚屋はこちらでございます。'],['shonin','茶屋の者','夜は通りに灯りがともって、昼のようでございます。'],['q_traveler','江戸見物の旅人','国へ帰ったら、江戸の吉原の話をしてやろう。']];
+  for(let j=0;j<12;j++){ const P2=YP[j%YP.length],x=508+(j%3)*2,z0=-172-rnd()*30; npc(P2[0],j%2?[[x,z0-40],[x,z0]]:[[x,z0],[x,z0-40]],.4+rnd()*.4,P2[1],P2[2]); }
+  for(let j=0;j<6;j++){ const P2=YP[(j+2)%YP.length],z=[-192,-222][j%2],x0=478+rnd()*20; npc(P2[0],[[x0,z],[x0+50,z]],.4+rnd()*.3,P2[1],P2[2]); }
+  /* 太夫の道中: 太夫が禿（かむろ）と若い衆を連れて揚屋へ向かう */
+  npc('gy_hime',[[511,-246],[511,-176]],.22,'太夫','揚屋へまいります。ゆっくり歩くのがならわし。');
+  npc('musume_r',[[509.6,-244.5],[509.6,-174.5]],.22,'禿（かむろ）','太夫さまのお供でございます。');
+  npc('musume_r',[[512.4,-244.5],[512.4,-174.5]],.22,'禿（かむろ）','わたしもいつか太夫さまのように。');
+  npc('shonin',[[511,-249],[511,-179]],.22,'若い衆','道をあけてくだされ。太夫のお通りじゃ。');
+  for(const [s2,x,z,nm,say] of [['yari_a',506.5,-163,'大門の番','大門は夜になると閉める。中で騒ぎを起こす者はゆるさぬぞ。'],['q_merchant',515.5,-163.5,'大門の前の町人','この堀と塀で囲まれた中が吉原。元和3年（1617）に御公儀のお許しが出たのじゃ。']]) npc(s2,[[x,z]],0,nm,say,{fixed:true});
+  for(const m of MISE){ const c=Math.cos(m.ry),s=Math.sin(m.ry); for(const off of [-1.2,1.2]){ const x=m.cx+(m.eo+off)*c+(m.F+.5)*s,z=m.cz-(m.eo+off)*s+(m.F+.5)*c; YLAN.push([x,z]); } } }
+{ const G=RD.ageya; rp(G,'gy_hime',-2.6,.25,0,{},true,['太夫','ようこそ。今宵は琴をひとつ、お聞かせいたしましょう。']); rp(G,'musume_r',-1.6,0,1.6,{},true,['禿','太夫さまのお道具をお持ちしました。']);
+  rp(G,'sam_haori',2.2,0,0,{flip:true},true,['客の侍','太夫は話もうまい。歌の道にも通じておる。']); rp(G,'q_merchant',3.6,0,-3.2,{},true,['揚屋の主人','元吉原では、客はまず揚屋へ上がり、そこへ遊女をお呼びするのでございます。']);
+  rp(G,'i_byobu_fuji',-4.8,0,0,{yaw:Math.PI/2,h:1.7}); rp(G,'i_andon',4.2,0,3.4); rp(G,'i_andon',-4.2,0,-3.6); }
 /* 町の灯り・店先の道具・高札 */
 const decoT=new Crowd(GE,900,false);
+for(const [x,z] of YLAN) decoT.add('lan_red',x,1.6,z,{shadow:false});
 for(const m of MACHI){ const c=Math.cos(m.ry),s=Math.sin(m.ry); for(const off of [-1.2,1.2]){ const x=m.cx+(m.eo+off)*c+(m.F+.5)*s,z=m.cz-(m.eo+off)*s+(m.F+.5)*c; const r=rnd(); if(r<.3) decoT.add(pick(['lan_white','lan_red']),x,1.55,z,{shadow:false}); else if(r<.42) decoT.add(pick(['az_sake','az_komedawara','az_bandai','az_yakimono']),x,0,z,{s:.8}); } }
 for(const [x,z] of [[336,92],[336,108],[218,92],[218,108],[96,92],[96,108],[-34,-152],[-34,-164],[60.5,74],[71.5,74],[234,-186],[246,-186]]) decoT.add('kagaribi',x,gyT(x,z),z,{s:1});
 for(const [s,x,z] of [['az_roten',466,-120],['az_roten',540,-36],['az_yakimono',520,48],['az_kosatsu',500,-131],['az_niguruma',488,-124],['az_shogi',530,-120],['az_roten',470,130],['az_kosatsu',226,92],['az_bandai',476,-126]]) decoT.add(s,x,gyT(x,z),z,{});
@@ -3677,7 +3736,7 @@ function updateTags(){ const cx=camera.position.x,cy=camera.position.y,cz=camera
     while(hit(sy)&&k<5){ sy-=q.ph*1.05; k++; }
     if(k){ q.t.s.position.y+=q.hh*1.05*k; } if(hit(sy)){ q.t.s.scale.multiplyScalar(.7); q.t.s.material.opacity=.55; } else q.t.s.material.opacity=1;
     placed.push({sx:q.sx,sy,pw:q.pw,ph:q.ph}); } }
-const TAGF={meireki:[()=>{ tagP(420,-280,'本郷・湯島から燃え広がる火','n',14); tagP(500,-60,'日本橋の町人地','n',10); tagP(TA.cx,TA.cz,'寛永の天守','n',44); },
+const TAGF={meireki:[()=>{ tagP(420,-280,'本郷・湯島から燃え広がる火','n',14); tagP(500,-60,'日本橋の町人地','n',10); tagP(511,-210,'元吉原も焼ける（のちに浅草へ移る）','n',10); tagP(TA.cx,TA.cz,'寛永の天守','n',44); },
   ()=>{ tagP(-20,-300,'北の丸の大名屋敷が燃える','n',20); tagP(TA.cx,TA.cz,'天守・本丸御殿 炎上','n',44); tagP(-250,90,'西の丸（将軍家綱が避難）','k',16); },
   ()=>{ tagP(-100,250,'西の丸下の大名屋敷','n',12); tagP(380,40,'大名小路の大名火消','k',12); tagP(-250,90,'焼け残った西の丸','k',16); },
   ()=>{ tagP(TA.cx,TA.cz,'焼け落ちた天守','n',20); tagP(260,120,'粥の施し（救い小屋）','k',8); }]};
@@ -3922,7 +3981,7 @@ try{ const m=new URLSearchParams(location.search).get('era'); if(m!=='modern'){ 
 ROOMS.forEach(R=>{ if(!R.exitZone||!R.spawn||!R.boxes) return; const ez=R.exitZone,sx=R.spawn[0],sz=R.spawn[1],cor={x0:Math.min(sx,ez.x0)-.6,x1:Math.max(sx,ez.x1)+.6,z0:Math.min(sz,ez.z0)-1.2,z1:Math.max(sz,ez.z1)+.6};
   R.boxes=R.boxes.filter(b=>!(b.x1+.25>cor.x0&&b.x0-.25<cor.x1&&b.z1+.25>cor.z0&&b.z0-.25<cor.z1)); });
 requestAnimationFrame(frame);
-window.__dbg={groundH,roomOK,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
+window.__dbg={yaws:p=>[Array.from(decoRoomT.pages[p].A.yaw.array.slice(0,decoRoomT.pages[p].n)),Array.from(decoRoomT.pages[p].A.size.array.slice(0,2*decoRoomT.pages[p].n)).map(v=>+v.toFixed(2))],hideDR:()=>{decoRoomT.visible=false;return 1},crowd:()=>[decoRoomT.pages.map(p=>p.n),npcCrowd.pages.map(p=>p.n)],sprI:n=>sprInfo(n),groundH,roomOK,spotList:()=>spotList(),ROOMSL:()=>ROOMS.map(R=>({name:R.name,era:R.era,ex:R.exitPos,n:(R.extra||[]).length})),step:dt=>{ updatePlayer(dt); updateHUD(); },keys,get P(){return P},TEN,ROOMS,setMode,walkable,teleportTo:(x,z)=>{ P.room=null; P.level=-1; P.x=x; P.z=z; P.y=groundH(x,z)+1.6; P.mode='walk'; },start:()=>{ $('goBtn').click(); }};
 window.__oc={spotList:()=>spotList(),stepOK:(x,z)=>stepOK(x,z),dbgBlock:(x,z,m)=>{ const out=[]; for(const k of ['shared',MODE]){ const l=BSETS[k].grid.get(Math.floor(x/GC)+','+Math.floor(z/GC))||[]; for(const b of l) if(inR(b,x,z,m||.35)) out.push(k+':'+b.kind+' '+[b.x0,b.z0,b.x1,b.z1].map(v=>v.toFixed(1)).join(',')); } return out.join(' | ')+' walk='+walkable(x,z)+' g='+groundH(x,z).toFixed(2)+' water='+waterAt(x,z,.6); },P,dbg:{renderer,M,sun,camera,scene},ROOMS,walkable,groundH,walkFloor:(L,x,z)=>walkFloor(L,x,z),spots:()=>curSpots,enterRoom,sim:(n,dt,k)=>{ Object.assign(keys,k||{}); for(let i=0;i<n;i++) updatePlayer(dt||.05); for(const q in k||{}) keys[q]=false; },setMode,teleport:id=>{ const s=curSpots.find(q=>q.id===id); if(s) teleport(s); },start:()=>$('goBtn').click(),TEN,get MODE(){ return MODE; }};
 /* スマホでGPUのメモリが足りずに描画が止まったとき: 黒い画面のままにせず、画質「軽」にして読み直す */
 renderer.domElement.addEventListener('webglcontextlost',e=>{ e.preventDefault(); try{ localStorage.setItem('oc-az-q','low'); }catch(_){}
