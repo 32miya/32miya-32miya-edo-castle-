@@ -2606,7 +2606,15 @@ function mise(cx,cz,ry,w,d){ const M0=TM(cx,0,cz,ry),h1=3,h=5.9,hw=(w-.15)/2,F=d
   addM(B.stone,boxUVGeo(w-.1,.22,.34,1.2,1.2),M0,TM(0,.11,F+.1)); for(const sx of [-1,1]) addM(B.darkwood,new THREE.BoxGeometry(.24,h-.1,.24),M0,TM(sx*(hw-.08),(h-.1)/2,F+.08));
   /* 1階: 入口と紅殻格子（見世の格子） */ const ent=1.7,eo=(rnd()<.5?-1:1)*Math.min(hw-1.4,1.2+rnd()); MISE.push({cx,cz,ry,w,d,eo,F,h,gh:1.6});
   addM(B.darkwood,new THREE.BoxGeometry(ent,2.3,.04),M0,TM(eo,1.2,F+.03));
-  for(let x=-hw+.3;x<hw-.25;x+=.2){ if(Math.abs(x-eo)<ent/2+.05) continue; addM(B.darkwood,new THREE.BoxGeometry(.07,2.4,.08),M0,TM(x,1.35,F+.12),BENI); }
+  /* 張見世: 横町の見世は、入口と反対の側に通りへ張り出した畳の間をつくり、紅殻格子の内に遊女が並ぶ（通りから格子ごしに見える） */
+  const hm=Math.abs(Math.sin(ry))<.5&&w>6.2,Dp=1.05; let hx0=0,hx1=0; if(hm){ if(eo<0){ hx0=eo+ent/2+.25; hx1=hw-.2; } else { hx0=-hw+.2; hx1=eo-ent/2-.25; } }
+  const hmOK=hm&&hx1-hx0>2.2,me=MISE[MISE.length-1]; if(hmOK){ Object.assign(me,{hx0,hx1,Dp});
+    const hc=(hx0+hx1)/2,hl=hx1-hx0; addM(B.tatami,boxUVGeo(hl,.45,Dp+.02,1.8,1.8),M0,TM(hc,.225,F+Dp/2)); addM(B.darkwood,new THREE.BoxGeometry(hl,.47,.06),M0,TM(hc,.235,F+Dp+.02));
+    M.hmGlow=M.hmGlow||std({color:0x2a1408,emissive:new THREE.Color(0xc87838),emissiveIntensity:.85,roughness:1}); { const par=B===BL?GL:GEe,gm=new THREE.Mesh(new THREE.PlaneGeometry(hl,2.1),M.hmGlow); gm.applyMatrix4(new THREE.Matrix4().multiplyMatrices(M0,TM(hc,1.53,F+.016))); par.add(gm); }
+    for(const x of [hx0,hx1]) addM(B.darkwood,new THREE.BoxGeometry(.12,2.62,Dp+.02),M0,TM(x,1.31,F+Dp/2)); addM(B.woodGrain,new THREE.BoxGeometry(hl+.1,.06,Dp+.04),M0,TM(hc,2.62,F+Dp/2));
+    for(let x=hx0+.18;x<hx1-.1;x+=.2) addM(B.darkwood,new THREE.BoxGeometry(.07,2.15,.08),M0,TM(x,1.55,F+Dp),BENI); for(const yy of [.5,2.58]) addM(B.darkwood,new THREE.BoxGeometry(hl,.1,.12),M0,TM(hc,yy,F+Dp),BENI);
+    const p0=[hx0,F],p1=[hx1,F+Dp+.1],c0=Math.cos(ry),s0=Math.sin(ry),W=([x,z])=>[cx+x*c0+z*s0,cz-x*s0+z*c0],A=W(p0),Bq=W(p1); block(Math.min(A[0],Bq[0]),Math.min(A[1],Bq[1]),Math.max(A[0],Bq[0]),Math.max(A[1],Bq[1]),'machi'); }
+  for(let x=-hw+.3;x<hw-.25;x+=.2){ if(Math.abs(x-eo)<ent/2+.05||(hmOK&&x>hx0-.05&&x<hx1+.05)) continue; addM(B.darkwood,new THREE.BoxGeometry(.07,2.4,.08),M0,TM(x,1.35,F+.12),BENI); }
   for(const yy of [.22,2.55]) addM(B.darkwood,new THREE.BoxGeometry(w-.4,.1,.12),M0,TM(0,yy,F+.12),BENI);
   addM(B.noren,new THREE.PlaneGeometry(ent*.95,1),M0,TM(eo,1.95,F+.14),new THREE.Color(pick(['#6e2d24','#26406a','#4a3a52','#2f3a4e'])));
   /* 2階: 障子と紅殻の手すり */ addM(B.plaster,boxUVGeo(w-.8,1.5,.06,2,1),M0,TM(0,h1+1.25,F+.02),new THREE.Color('#efe6cf'));
@@ -4050,6 +4058,11 @@ const ykItems=G=>{ rp(G,'yk_tabakobon',.8,0,-1.5,{}); rp(G,'kakejiku',-3.8,.22,-
 /* 現代のカフェと本屋の人 */
 { const G=RD.xShop2; rp(G,'mc_cafe_ten',-2.4,0,-2.9,{},true); rp(G,'mc_cafe_kyaku',1.2,0,-1.3,{},true); }
 { const G=RD.xShop3; rp(G,'mc_hon_kyaku',0,0,-1.8,{},true); rp(G,'mc_hon_ten',2.3,0,1.4,{},true); }
+
+/* 通りから見える張見世の遊女（格子の内に座って並ぶ） */
+for(const [L,crowd,pool] of [[MISE,decoTe,['yw_tayu_za','yw_kagami','yw_tegami','yz_shami']],[NMISE,decoL,['yw_tayu_za','yo_za','yw_kagami','yw_tegami','yz_shami']]]){ let k=0;
+  for(const m of L){ if(!m.Dp) continue; const c=Math.cos(m.ry),s=Math.sin(m.ry),n=m.hx1-m.hx0>3.4?3:2;
+    for(let q=0;q<n;q++){ const lx=m.hx0+(q+.5)*(m.hx1-m.hx0)/n+((k%3)-1)*.12,lz=m.F+m.Dp*.42; crowd.add(pool[(k++)%pool.length],m.cx+lx*c+lz*s,.45,m.cz-lx*s+lz*c,{}); } } }
 function updateChars(dt){ updateNPC(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?((typeof inYW==='function'&&inYW())||(typeof inSY==='function'&&inSY())?.9:.45):timeIdx===2?.88:timeIdx===0?.95:1); }
 /* タップで話す */
 const _pv=V3();
