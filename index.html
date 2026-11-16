@@ -3076,7 +3076,22 @@ function ykMaru(){ const c=makeCanvas(256,256),g=c.getContext('2d'); g.clearRect
 M.bengara=std({map:tPlaster,color:0x3a0a05,roughness:1}); M.gunjo=std({map:tPlaster,color:0x0c1640,roughness:1});
 M.ykFsR=std({map:ykFusuma('#a3261c',0),color:0xc8bcb0,roughness:.75}); M.ykFsR2=std({map:ykFusuma('#8e1f18',2),color:0xc8bcb0,roughness:.75}); M.ykFsG=std({map:ykFusuma('#c9a24a',1),color:0xc8bcb0,roughness:.5,metalness:.25});
 M.ykTenjo=std({map:ykTenjo(),color:0x9a8e84,roughness:.8}); { const t=ykMaru(); M.ykMaru=std({map:t,transparent:true,alphaTest:.5,emissive:new THREE.Color(0xffd9a0),emissiveMap:t,emissiveIntensity:.55,side:THREE.DoubleSide}); }
-M.bonbori=std({color:0xfff4dc,emissive:new THREE.Color(0xffc880),emissiveIntensity:.9,roughness:.8}); M.mosen=std({color:0x3e0604,roughness:1});
+M.bonbori=std({color:0xd8c8a8,emissive:new THREE.Color(0xffb860),emissiveIntensity:.45,roughness:.8}); M.mosen=std({color:0x3e0604,roughness:1});
+/* 和傘（番傘・蛇の目）: 骨の見える内側をこちらへ向けて開いて飾る */
+function ykKasaTex(col,ring){ const c=makeCanvas(512,256),g=c.getContext('2d'); g.fillStyle=col; g.fillRect(0,0,512,256); g.strokeStyle='rgba(0,0,0,.35)'; g.lineWidth=3; for(let x=0;x<512;x+=512/32){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,256); g.stroke(); }
+  g.fillStyle=ring; g.fillRect(0,26,512,30); g.fillStyle='rgba(0,0,0,.35)'; g.fillRect(0,0,512,14); g.fillRect(0,240,512,16); return toTex(c); }
+M.kasaR=std({map:ykKasaTex('#b8160c','#f2e6d0'),side:THREE.DoubleSide,roughness:.7,emissive:new THREE.Color(0x400000),emissiveIntensity:.4}); M.kasaB=std({map:ykKasaTex('#1c2240','#d8b860'),side:THREE.DoubleSide,roughness:.7});
+function ykKasa(R,x,y,z,ry,tilt,mat,r){ r=r||.85; const g=new THREE.ConeGeometry(r,r*.36,24,1,true).rotateX(-Math.PI/2); bfix(mat).add(g,TM(R.ox+x,R.y+y,R.oz+z,ry,1,1,1,0,tilt));
+  const hd=new THREE.CylinderGeometry(.018,.018,r*1.1,6).rotateX(Math.PI/2).translate(0,0,r*.4); bfix('darkwood').add(hd,TM(R.ox+x,R.y+y,R.oz+z,ry,1,1,1,0,tilt)); bfix('kinpaku').add(new THREE.CylinderGeometry(.05,.05,.06,8).rotateX(Math.PI/2).translate(0,0,-r*.17),TM(R.ox+x,R.y+y,R.oz+z,ry,1,1,1,0,tilt)); }
+/* 紅葉の枝を活けた大きな花器 */ M.momiji=std({color:0x6a0c04,roughness:.9}); M.momiji2=std({color:0x8a2a06,roughness:.9});
+function ykMomiji(R,x,z,s){ s=s||1; rg(R,'lacquer',new THREE.CylinderGeometry(.22*s,.16*s,.45*s,12),x,.22*s,z); for(let k=0;k<5;k++){ const a=k*1.3,l=(1+k*.12)*s; rg(R,'darkwood',new THREE.CylinderGeometry(.015,.025,l,5).translate(0,l/2,0),x,.4*s,z,a); }
+  for(let k=0;k<70;k++){ const a=k*2.399,rr=.15+.55*Math.sqrt(k/70)*s,y=(.9+Math.sin(k*1.7)*.35+.5)*s; rg(R,k%3?'momiji':'momiji2',new THREE.IcosahedronGeometry(.07*s,0),x+Math.cos(a)*rr,y,z+Math.sin(a)*rr*.7); } }
+/* 丸紋の格天井（濃い色の板に、丸の中の絵） */
+function ykTenjoMaru(){ const c=makeCanvas(512,512),g=c.getContext('2d'); g.fillStyle='#1a0e08'; g.fillRect(0,0,512,512); let k=0; const pal=['#7a1a12','#1e2a4a','#8a6a2a','#2a4030','#5a2040'];
+  for(let i=0;i<4;i++) for(let j=0;j<4;j++){ const x=i*128+8,y=j*128+8; g.fillStyle='#3a2014'; g.fillRect(x,y,112,112); g.fillStyle=pal[(k)%5]; g.beginPath(); g.arc(x+56,y+56,44,0,6.283); g.fill(); g.strokeStyle='#c9a64a'; g.lineWidth=3; g.stroke();
+    ykFlower(g,x+56,y+56,34,['#f2a0b0','#f6f2e6','#f2c84a','#e86a8a','#a0c0f0'][(k*3)%5],k%2?'kiku':'botan'); k++; }
+  return toTex(c); }
+M.ykTenjoM=std({map:ykTenjoMaru(),color:0xb0a498,roughness:.8}); M.bengaraD=std({map:tPlaster,color:0x300204,roughness:1}); M.mosenD=std({color:0x3a0002,roughness:1});
 /* 座敷の飾り一式。o.wall: 'bengara'|'gunjo'、o.fs: 襖の材、o.maru: 丸窓、o.bon: 雪洞の数 */
 function ykDress(R,w,d,h,o){ const fs=o.fs||['ykFsR','ykFsR2']; if(o.ceil) rb(R,'ykTenjo',-w/2,w/2,h-.03,h-.01,-d/2,d/2,false,3.6);
   /* 襖（左右の壁） */ for(const sx of (o.sides||[-1,1])){ let k=0; for(let z=-d/2+.3;z<d/2-1.4;z+=1.85){ const z1=Math.min(d/2-1.3,z+1.8); if(z1-z<1) continue; rb(R,fs[(k++)%fs.length],sx*(w/2-.04)-.02,sx*(w/2-.04)+.02,.05,2.45,z,z1,false,1.8); } rb(R,'darkwood',sx*(w/2-.08)-.04,sx*(w/2-.08)+.04,2.45,2.6,-d/2,d/2); }
@@ -3084,14 +3099,20 @@ function ykDress(R,w,d,h,o){ const fs=o.fs||['ykFsR','ykFsR2']; if(o.ceil) rb(R,
   rb(R,'darkwood',-w/2,w/2,2.45,2.6,-d/2+.06,-d/2+.12);
   if(o.maru) rg(R,'ykMaru',new THREE.PlaneGeometry(1.9,1.9),o.maruX||0,1.45,-d/2+.08);
   /* 床の間: 奥の左、金屏風と床框 */ if(o.toko!==false){ const x0=-w/2+.1,x1=-w/2+2.3; rb(R,'darkwood',x0,x1,0,.22,-d/2+.06,-d/2+.9,true); rb(R,'kinpaku',x0+.1,x1-.1,.22,2.3,-d/2+.08,-d/2+.12); rb(R,'darkwood',x1-.06,x1+.06,0,2.6,-d/2+.06,-d/2+.9); }
-  /* 赤い毛氈 */ if(o.mosen!==false) rb(R,'mosen',-1.6,1.6,0,.015,-d/2+1.2,d/2-1.6);
-  /* 雪洞（ぼんぼり） */ for(const [x,z] of (o.bonPos||[[-w/2+.7,-d/2+1.3],[w/2-.7,-d/2+1.3],[-w/2+.7,d/2-2],[w/2-.7,d/2-2]])){ rb(R,'shu',x-.12,x+.12,0,.06,z-.12,z+.12); rb(R,'shu',x-.025,x+.025,.06,1.15,z-.025,z+.025); rg(R,'bonbori',new THREE.CylinderGeometry(.17,.21,.42,14),x,1.36,z); rb(R,'shu',x-.13,x+.13,1.57,1.6,z-.13,z+.13); }
+  /* 赤い毛氈 */ if(o.mosen!==false){ const m=o.mosen||[-1.6,1.6,-d/2+1.2,d/2-1.6]; rb(R,o.mosenMat||'mosen',m[0],m[1],0,.015,m[2],m[3]); }
+  /* 雪洞（ぼんぼり） */ const bs=o.bonS||1; for(const [x,z] of (o.bonPos||[[-w/2+.7,-d/2+1.3],[w/2-.7,-d/2+1.3],[-w/2+.7,d/2-2],[w/2-.7,d/2-2]])){ rb(R,'shu',x-.14*bs,x+.14*bs,0,.06,z-.14*bs,z+.14*bs); rb(R,'shu',x-.025,x+.025,.06,1.15,z-.025,z+.025); rg(R,'bonbori',new THREE.CylinderGeometry(.17*bs,.21*bs,.42*bs,16),x,1.15+.21*bs,z); rb(R,'shu',x-.13*bs,x+.13*bs,1.15+.42*bs,1.18+.42*bs,z-.13*bs,z+.13*bs); }
   /* 衣桁にかけた打掛 */ if(o.ikou){ const [x,z]=o.ikou; rb(R,'lacquer',x-1,x-.95,0,1.75,z-.03,z+.03); rb(R,'lacquer',x+.95,x+1,0,1.75,z-.03,z+.03); rb(R,'lacquer',x-1.15,x+1.15,1.72,1.79,z-.04,z+.04); rb(R,'lacquer',x-1,x+1,.25,.3,z-.03,z+.03);
     const v=[],uv=[]; quad(v,uv,[x-1.05,.12,z+.06],[x+1.05,.12,z+.06],[x+.95,1.74,z+.06],[x-.95,1.74,z+.06],1,1); bfix(fs[0]).add(geoFrom(v,uv),new THREE.Matrix4().makeTranslation(R.ox,R.y,R.oz)); }
   /* 鏡台 */ if(o.kyodai){ const [x,z]=o.kyodai; rb(R,'lacquer',x-.3,x+.3,0,.45,z-.2,z+.2,true); rb(R,'lacquer',x-.04,x+.04,.45,1.05,z-.12,z-.08); rg(R,'gold',new THREE.CylinderGeometry(.2,.2,.03,20).rotateX(Math.PI/2),x,1.1,z-.08); } }
 /* 2階の花魁の座敷。1階の見世の奥の大階段から上がる */
-function ykUpper(R,late){ const w=10,d=9,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'plIn',front:'tl_f_shoji',ceil:'ykTenjo',ctile:3.6,door:1.6,doorMat:'tl_f_shoji',lamps:2});
-  ykDress(R,w,d,h,{wall:late?'bengara':'gunjo',fs:late?['ykFsR','ykFsR2']:['ykFsG','ykFsR'],maru:true,maruX:1,ikou:[w/2-1.6,-d/2+.5],kyodai:[-w/2+.6,1.2]});
+function ykUpper(R,late){ const w=10,d=9,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'plIn',front:'tl_f_shoji',ceil:'ykTenjoM',ctile:3.6,door:1.6,doorMat:'tl_f_shoji',lamps:2});
+  ykDress(R,w,d,h,{wall:late?'bengaraD':'gunjo',fs:late?['ykFsR','ykFsR2']:['ykFsG','ykFsR'],maru:true,maruX:1,ikou:[w/2-1.6,-d/2+.5],kyodai:[-w/2+.6,-1.4],mosen:[-3.4,2.6,-3.6,1.6],mosenMat:'mosenD',bonS:1.3,bonPos:[[-4.1,-3.0],[1.1,-3.0],[-2.6,1.6],[3.3,-1.6]]});
+  /* 朱塗りの格子（左の壁の奥） */ for(let z=-3.3;z<-1.9;z+=.15) rb(R,'shu',-w/2+.08,-w/2+.14,.05,2.45,z-.03,z+.03); rb(R,'shu',-w/2+.06,-w/2+.16,.05,.15,-3.4,-1.8); rb(R,'shu',-w/2+.06,-w/2+.16,2.35,2.45,-3.4,-1.8);
+  /* 違い棚（床の間と丸窓のあいだ） */ rb(R,'lacquer',-2.6,-.2,0,.5,-d/2+.06,-d/2+.5,true); rb(R,'lacquer',-2.6,-1.3,1.0,1.05,-d/2+.06,-d/2+.42); rb(R,'lacquer',-1.4,-.2,1.3,1.35,-d/2+.06,-d/2+.42); rb(R,'lacquer',-1.37,-1.33,1.05,1.3,-d/2+.06,-d/2+.42); rb(R,'lacquer',-2.6,-.2,2.0,2.4,-d/2+.06,-d/2+.42);
+  /* 花魁の座る厚い緋の座布団 */ rb(R,'mosenD',-1.3,.1,0,.2,-2.6,-1.3,true); rb(R,'kinpaku',-1.32,.12,.19,.21,-2.62,-2.58); rb(R,'kinpaku',-1.32,.12,.19,.21,-1.34,-1.28);
+  /* 煙草盆の長い煙管 */ rb(R,'black',.35,1.3,.21,.23,-1.95,-1.92); rb(R,'kinpaku',.33,.42,.2,.24,-1.96,-1.91); rb(R,'kinpaku',1.24,1.32,.2,.24,-1.96,-1.91);
+  /* 和傘（手前の左の隅に開いて立てる） */ ykKasa(R,-4.3,.95,2.9,Math.PI/2+.2,.15,'kasaR'); ykKasa(R,-4.5,1.45,1.8,Math.PI/2,-.1,late?'kasaB':'kasaR',.95); ykKasa(R,-4.1,.8,1.0,Math.PI/2-.35,.25,'kasaR',.75); R.boxes.push({x0:R.ox-w/2,x1:R.ox-3.4,z0:R.oz+.3,z1:R.oz+3.6});
+  /* 紅葉の大きな活け花（奥の右） */ ykMomiji(R,2.6,-d/2+.8,1.2);
   /* 階段の降り口（手前の右） */ const sx0=w/2-2,sx1=w/2-.1,sz0=d/2-2.6,sz1=d/2-.3; rb(R,'black',sx0,sx1,0,.01,sz0,sz1); for(let k=0;k<4;k++) rb(R,'woodGrain',sx0+.08,sx1-.08,.01,.02,sz0+.3+k*.55,sz0+.42+k*.55);
   rb(R,'darkwood',sx0-.05,sx0+.05,0,.9,sz0,sz1-1.2,true); rb(R,'darkwood',sx0-.05,sx1,0,.9,sz0-.05,sz0+.05,true); rb(R,'darkwood',sx0-.07,sx0+.07,.85,.95,sz0,sz1-1.2); rb(R,'darkwood',sx0-.06,sx0+.06,0,1,sz1-1.25,sz1-1.15);
   R.boxes.push({x0:R.ox+sx0,x1:R.ox+sx1,z0:R.oz+sz0,z1:R.oz+sz1-1.1}); R.downZone={x0:R.ox+sx0+.1,x1:R.ox+sx1,z0:R.oz+sz1-1.1,z1:R.oz+sz1};
@@ -4003,10 +4024,10 @@ function d2(R){ return R.d/2-1.2; }
 { const T=TEN.edo,F=T.FL,cx=T.cx,cz=T.cz; for(const [i,s,x,z,nm,say] of [[0,'ashigaru',-4,9,'穴蔵の番','この穴蔵には兵糧や武具が納めてある。上の階へは東の階段じゃ。'],[1,'samurai_a',-6,4,'天守番の侍','窓の銅の戸は、火の粉が入らぬよう閉めねばならぬのだが……。'],[3,'sam_kami',4,-3,'天守番','御殿の屋根があんなに小さく見える。'],[5,'sam_haori',2,3,'天守番','ここが最上階。西に富士、北東に筑波、東には江戸湊。将軍家のお膝元が一望じゃ。']]){
     npc(s,[[cx+x,cz+z]],0,nm,say,{fixed:true,y:F[i].y}); } }
 /* 2階の花魁の座敷 */
-{ const G=RD.giroUp; rp(G,'yw_tayu_za',-.6,0,-1.6,{},true,['太夫','ようこそお上がりくださいました。この座敷は、わたくしの部屋でございます。']); rp(G,'yd_kamuro_a',1.6,0,-.6,{},true,['禿','姐さんのお座敷は、いつも花でいっぱいなのです。']);
-  rp(G,'yi_koto',-2.6,0,-2.6,{}); rp(G,'yi_tabakobon',.7,0,-2.2,{}); rp(G,'yi_kabin',-4,.22,-3.9,{}); }
-{ const G=RD.giroUpN; rp(G,'yo_tayu2',-.6,0,-1.8,{},true,['花魁','よう来なんした。ゆるりとしておくんなまし。']); rp(G,'lp_shinzo',1.6,0,-.8,{},true,['新造','花魁のお座敷のしたくは、わたしたちの役目でございます。']); rp(G,'yd_kamuro_b',2.6,0,.4,{},true,['禿','花魁さまの煙管をお持ちしました。']);
-  rp(G,'yi_shamisen',-2.6,0,-2.4,{}); rp(G,'yi_tabakobon',.6,0,-2,{}); rp(G,'yi_kabin',-4,.22,-3.9,{}); }
+{ const G=RD.giroUp; rp(G,'yw_tayu_za',-.6,.2,-1.95,{},true,['太夫','ようこそお上がりくださいました。この座敷は、わたくしの部屋でございます。']); rp(G,'yd_kamuro_a',1.6,0,-.4,{},true,['禿','姐さんのお座敷は、いつも花でいっぱいなのです。']);
+  rp(G,'yi_koto',-2.4,0,-.4,{}); rp(G,'yi_tabakobon',.8,0,-1.5,{}); rp(G,'kakejiku',-3.8,.22,-4.3,{}); rp(G,'yi_kabin',-1.9,1.05,-4.25,{}); rp(G,'ex_chawan_gold',-.8,1.35,-4.25,{}); rp(G,'yi_bunko',-1.4,.5,-4.2,{}); }
+{ const G=RD.giroUpN; rp(G,'yo_tayu2',-.6,.2,-2.0,{},true,['花魁','よう来なんした。ゆるりとしておくんなまし。']); rp(G,'lp_shinzo',1.7,0,-.6,{},true,['新造','花魁のお座敷のしたくは、わたしたちの役目でございます。']); rp(G,'yd_kamuro_b',.4,0,.6,{},true,['禿','花魁さまの煙管をお持ちしました。']);
+  rp(G,'yi_shamisen',-2.4,0,-.4,{}); rp(G,'yi_tabakobon',.8,0,-1.5,{}); rp(G,'kakejiku',-3.8,.22,-4.3,{}); rp(G,'yi_kabin',-1.9,1.05,-4.25,{}); rp(G,'ex_chawan_gold',-.8,1.35,-4.25,{}); rp(G,'yi_bunko',-1.4,.5,-4.2,{}); }
 function updateChars(dt){ updateNPC(dt); FX.update(dt); const T=TIMES[timeIdx],inside=P.room||P.level>=0; sprTint(inside?1:T.night>.5?((typeof inYW==='function'&&inYW())||(typeof inSY==='function'&&inSY())?.9:.45):timeIdx===2?.88:timeIdx===0?.95:1); }
 /* タップで話す */
 const _pv=V3();
