@@ -2978,30 +2978,77 @@ const bukeD=(b,era)=>{ const f=b.face,n=f==='e'?[1,0]:f==='w'?[-1,0]:f==='s'?[0,
 const ygD=(y,era)=>{ const c=Math.abs(Math.cos(y.ry)),s=Math.abs(Math.sin(y.ry)),hx=y.w/2*c+y.d/2*s+.6,hz=y.w/2*s+y.d/2*c+.6; const d=autoDoor(era,y.cx,y.cz,hx,hz,[0,1]); if(d) d.y=y.y; return d; };
 const ygPar=(y,era)=>era==='modern'?(y.par===GM):(y.par===GE||y.par===scene);
 /* 大奥の広敷御門の戸 */ doorBatch('edo',45.3,-48,1,0,2.2,2.8,PL.honmaru.H,'#5a2a2a');
+/* ひとつの種類の建物の入口を、中の造りがちがう数種類の部屋に割りふる（場所から決まる乱数なので、同じ建物はいつも同じ中） */
+function splitDoors(Rs,list,add){ const parts=Rs.map(()=>[]); for(const d of list){ if(!d) continue; const h=Math.abs(Math.sin(d.px*12.9898+d.pz*78.233)*43758.5453)%1; parts[Math.min(Rs.length-1,Math.floor(h*Rs.length))].push(d); } Rs.forEach((R,i)=>add(R,parts[i])); }
+const xRoom=(era,nm,kana,txt,meta,sub)=>mkRoom(Object.assign({era},sub?{sub}:{},doorAt(0,-9000,0,1),roomTxt(nm,kana,txt,meta)));
+/* 反物などの色とりどりの品を棚に */ function goodsShelf(R,x0,x1,z,y0,rows,cols){ rb(R,'darkwood',x0,x1,y0,y0+rows*.42+.1,z-.3,z-.25); for(let r=0;r<=rows;r++) rb(R,'darkwood',x0,x1,y0+r*.42,y0+r*.42+.04,z-.3,z+.05); const pal=['#26406a','#6e2d24','#b0301e','#d9b25a','#3b5a3a','#4a3a52','#e8e0cc','#7a4a2a'];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const x=x0+(c+.5)*(x1-x0)/cols; rg(R,'noren',new THREE.BoxGeometry((x1-x0)/cols*.8,.3,.3),x,y0+r*.42+.2,z-.12,0,pal[(r*3+c*5)%pal.length]); } }
 /* ----- 現代 ----- */
 B=BM;
 { const R=RD.xShop=mkRoom(Object.assign({era:'modern'},doorAt(0,-9000,0,1),roomTxt('ビルの1階のお店','ビル の おみせ','大手町・丸の内のビルの1階。中のようすは想像です。',[['場所','大手町・丸の内']])));
   const w=10,d=9,h=3.4; shell(R,w,d,h,{floor:'floor',wall:'kmHall',front:'glass',ceil:'woodGrain',door:1.8,doorMat:'glass',lamps:4});
   for(let k=0;k<3;k++) rb(R,'woodGrain',-3.6+k*2.6,-2.8+k*2.6,0,1.6,-2.5,1.5,true); rb(R,'showcase',2.2,4.6,0,1,2,2.8,true); rb(R,'woodGrain',w/2-.5,w/2,0,2,-d/2+.5,d/2-1,true);
-  addDoors(R,HOUSES.map(o=>({px:o.x+o.nx*.55,pz:o.z+o.nz*.55,nx:o.nx,nz:o.nz})),{mark:true,w:1.6,h:2.3}); }
+  const R2=RD.xShop2=xRoom('modern','ビルの1階のカフェ','ビル の カフェ','大手町・丸の内のビルの1階のカフェ。中のようすは想像です。',[['場所','大手町・丸の内']]);
+  shell(R2,10,9,3.4,{floor:'woodGrain',wall:'kmHall',front:'glass',ceil:'woodGrain',door:1.8,doorMat:'glass',lamps:4});
+  rb(R2,'woodGrain',-5,-1,0,1.05,-4.5,-3.6,true); rb(R2,'showcase',-4.6,-2.4,1.05,1.5,-4.1,-3.7); rb(R2,'black',-.6,-.1,0,1.8,-4.5,-4.2);
+  for(const [x,z] of [[-3,0],[0,-1],[3,-2.4],[3,.6],[-3,2.6]]){ rb(R2,'woodGrain',x-.45,x+.45,.72,.78,z-.45,z+.45,true); rb(R2,'black',x-.04,x+.04,0,.72,z-.04,z+.04); for(const sx of [-1,1]) rb(R2,'black',x+sx*.85-.2,x+sx*.85+.2,0,.45,z-.2,z+.2); }
+  const R3=RD.xShop3=xRoom('modern','ビルの1階の本屋','ビル の ほんや','大手町・丸の内のビルの1階の本屋。中のようすは想像です。',[['場所','大手町・丸の内']]);
+  shell(R3,10,9,3.4,{floor:'floor',wall:'kmHall',front:'glass',ceil:'woodGrain',door:1.8,doorMat:'glass',lamps:4});
+  for(const x of [-3.4,-1.2,1.2,3.4]){ rb(R3,'woodGrain',x-.35,x+.35,0,1.9,-3.6,.4,true); for(let k=0;k<4;k++) rg(R3,'noren',new THREE.BoxGeometry(.74,.32,4),x,.3+k*.42,-1.6,0,['#c9b48a','#6e8aa8','#a85a4a','#d8d0c0'][k]); }
+  goodsShelf(R3,-4.8,4.8,-4.2,.2,4,12); rb(R3,'showcase',2.4,4.4,0,.9,2,2.8,true);
+  splitDoors([R,R2,R3],HOUSES.map(o=>({px:o.x+o.nx*.55,pz:o.z+o.nz*.55,nx:o.nx,nz:o.nz})),(Q,l)=>addDoors(Q,l,{mark:true,w:1.6,h:2.3})); }
 /* ----- 江戸時代 ----- */
 B=BE;
 { const R=RD.xMachi=mkRoom(Object.assign({era:'edo'},doorAt(0,-9000,0,1),roomTxt('日本橋の町家','にほんばし の まちや','日本橋の町人の店。表の店の間から奥へ通り土間が続きます（中のようすは想像）。',[['町','日本橋']])));
   const w=6.4,d=11,h=3.6; shell(R,w,d,h,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'woodGrain',door:1.6,doorX:-2,doorMat:'noren',lamps:2});
   rb(R,'tatami',-.9,w/2,0,.45,-d/2,d/2-.8,true,1.8); rb(R,'darkwood',-1,-.9,0,.47,-d/2,d/2-.8); rb(R,'woodGrain',2.6,3.1,.45,2.3,-1.4,1,true); rb(R,'stone',-3,-1.4,0,.8,-d/2+.3,-d/2+1.6,true);
-  addDoors(R,MACHI.map(machiD)); }
+  goodsShelf(R,-.6,w/2-.1,-d/2+.35,.5,5,6); R.name='日本橋の町家（呉服屋）'; R.text='日本橋の呉服屋。表の店の間に上がった客の前に、手代が棚から反物を出して見せました。奥へは通り土間が続きます（中のようすは想像）。';
+  const R2=RD.xMachi2=xRoom('edo','日本橋の町家（米屋）','にほんばし の こめや','日本橋の米屋。広い土間に米俵を積み、奥の板の間で量り売りや帳付けをしました（中のようすは想像）。',[['町','日本橋']]);
+  shell(R2,7.4,10,3.8,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'darkwood',door:2.4,doorMat:'noren',lamps:2}); pillarsRow(R2,'darkwood',7.4,10,3.8,2.4,false);
+  rb(R2,'woodGrain',-3.7,3.7,0,.45,-5,-1.8,true,1.2); rb(R2,'darkwood',-3.7,3.7,.38,.48,-1.85,-1.75); rb(R2,'darkwood',.8,2.8,.45,1,-3.6,-3.1,true); rb(R2,'woodGrain',.7,2.9,1,1.06,-3.7,-3);
+  const R3=RD.xMachi3=xRoom('edo','日本橋の町家（薬種問屋）','にほんばし の やくしゅどんや','日本橋の薬種問屋（くすり屋）。壁いっぱいの「百味箪笥」の小さな引き出しに、何百種類もの生薬を分けて納めていました（中のようすは想像）。',[['町','日本橋（本町には薬種問屋が集まった）']]);
+  shell(R3,6.4,10,3.6,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'woodGrain',door:1.6,doorX:1.9,doorMat:'noren',lamps:2});
+  rb(R3,'woodGrain',-3.2,.7,0,.45,-5,5-.8,true,1.2); rb(R3,'darkwood',.7,.8,0,.47,-5,4.2);
+  rb(R3,'darkwood',-3.1,.5,.45,2.9,-5,-4.45,true); for(let r=0;r<7;r++) for(let c=0;c<10;c++){ const x=-3+(c+.5)*.35,y=.6+r*.33; rb(R3,'woodGrain',x-.15,x+.15,y,y+.29,-4.46,-4.42); rg(R3,'gold',new THREE.BoxGeometry(.05,.05,.04),x,y+.15,-4.4); }
+  rb(R3,'darkwood',-2.2,-.4,.45,.95,-1.2,-.7,true); rb(R3,'woodGrain',-2.3,-.3,.95,1.01,-1.3,-.6);
+  splitDoors([R,R2,R3],MACHI.map(machiD),(Q,l)=>addDoors(Q,l)); }
 { const R=RD.xBuke=mkRoom(Object.assign({era:'edo'},doorAt(0,-9000,0,1),roomTxt('大名屋敷','だいみょう やしき','大名の上屋敷。長屋門と土塀の奥に御殿があり、客を迎える座敷には床の間があります（中のようすは想像）。',[['住む人','大名とその家臣']])));
   const w=12,d=8,h=3.4; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'tsuchi',front:'shoji',ceil:'woodGrain',door:1.8,lamps:3}); pillarsRow(R,'darkwood',w,d,h,2.7,false);
   rb(R,'darkwood',-4.6,-2,0,.2,-d/2,-d/2+.9,true); rb(R,'lacquer',.4,1.6,0,.35,-.6,.4,true); fusumaWall(R,w,d,2.7,2.7,['suiboku','tl_f_take']);
-  addDoors(R,BUKE.filter(b=>b!==BUKE.find(q=>q.x0===346&&q.z0===-126)).map(b=>bukeD(b,'edo')),{mark:true,col:'#26406a'}); }
+  R.name='大名屋敷（座敷）';
+  const R2=RD.xBuke2=xRoom('edo','大名屋敷（書院）','だいみょうやしき の しょいん','大名屋敷の書院。正面に床の間と違い棚、横に明かり取りの付書院があり、主が書を読んだり客と対面したりしました（中のようすは想像）。',[['住む人','大名とその家臣']]);
+  { const w=11,d=8,h=3.4; shell(R2,w,d,h,{floor:'tatami',ftile:1.8,wall:'tsuchi',front:'shoji',ceil:'woodGrain',door:1.8,lamps:3}); pillarsRow(R2,'darkwood',w,d,h,2.7,false);
+    rb(R2,'darkwood',-4.4,-1.6,0,.22,-4,-3.1,true); rb(R2,'darkwood',-1.5,-1.4,0,2.9,-4,-3.1); /* 床の間 */
+    for(const [y,x0,x1] of [[1.1,-1.3,.2],[1.45,-.5,1.2],[2.3,-1.3,1.2]]) rb(R2,'darkwood',x0,x1,y,y+.05,-4,-3.5); rb(R2,'darkwood',-1.3,1.2,0,.6,-4,-3.4,true); /* 違い棚と地袋 */
+    rb(R2,'shoji',-w/2,-w/2+.06,.6,2.5,-2.6,.4); rb(R2,'darkwood',-w/2,-w/2+.7,.6,.66,-2.6,.4,true); /* 付書院 */
+    fusumaWall(R2,w,d,2.7,2.7,['tl_f_take','suiboku'],{back:false}); }
+  const R3=RD.xBuke3=xRoom('edo','大名屋敷（台所）','だいみょうやしき の だいどころ','大名屋敷の台所。何百人もの家臣の食事をまかなうため、広い土間に大きなかまどが並び、板の間の囲炉裏では湯がたえず沸いていました（中のようすは想像）。',[['住む人','大名とその家臣']]);
+  { const w=13,d=10,h=4.6; shell(R3,w,d,h,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'darkwood',door:2,doorMat:'woodGrain',lamps:3}); pillarsRow(R3,'darkwood',w,d,h,3.2,false);
+    rb(R3,'floor',.5,w/2,0,.5,-d/2,1,true,1.2); rb(R3,'black',2.6,3.8,.5,.52,-2.6,-1.4); rb(R3,'stone',2.5,3.9,.5,.58,-2.7,-2.6); rb(R3,'stone',2.5,3.9,.5,.58,-1.4,-1.3); rb(R3,'darkwood',3.17,3.23,.6,h,-2.03,-1.97);
+    for(let k=0;k<3;k++){ const x=-5.6+k*1.7; rb(R3,'plaster',x-.7,x+.7,0,.9,-d/2,-d/2+1.3,true); rb(R3,'black',x-.3,x+.3,.2,.55,-d/2+1.29,-d/2+1.31); rb(R3,'black',x-.35,x+.35,.9,.95,-d/2+.3,-d/2+1); } }
+  splitDoors([R,R2,R3],BUKE.filter(b=>b!==BUKE.find(q=>q.x0===346&&q.z0===-126)).map(b=>bukeD(b,'edo')),(Q,l)=>addDoors(Q,l,{mark:true,col:'#26406a'})); }
 { const R=RD.xNagaya=mkRoom(Object.assign({era:'edo'},doorAt(0,-9000,0,1),roomTxt('町人の家','ちょうにん の いえ','日本橋の裏通りの町人の住まい。入口の土間に台所があり、奥が畳の部屋です（中のようすは想像）。',[['町','日本橋']])));
   const w=5.4,d=7.4,h=3; shell(R,w,d,h,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'woodGrain',door:1.2,doorX:-1.6,doorMat:'noren',lamps:1});
   rb(R,'tatami',-.6,w/2,0,.4,-d/2,d/2-.6,true,1.8); rb(R,'stone',-w/2,-1.4,0,.75,-d/2,-d/2+1.2,true);
-  addDoors(R,SDOORS.edo.map(o=>({px:o.x+o.nx*.55,pz:o.z+o.nz*.55,nx:o.nx,nz:o.nz})),{mark:true,w:1.2,h:1.9,col:'#26406a'}); }
+  R.name='町人の家（裏長屋）';
+  const R2=RD.xNagaya2=xRoom('edo','町人の家（桶屋の仕事場）','ちょうにん の いえ','桶屋の家。表の土間が仕事場で、細い板を竹のたがで締めて桶や樽を作りました。奥の小さな畳の間が住まいです（中のようすは想像）。',[['町','日本橋']]);
+  shell(R2,6,7.4,3,{floor:'tsuchi',wall:'tsuchi',front:'woodGrain',ceil:'woodGrain',door:1.4,doorX:1.6,doorMat:'woodGrain',lamps:1});
+  rb(R2,'tatami',-3,.2,0,.4,-3.7,-1.2,true,1.8); rb(R2,'woodGrain',-2.6,-.6,0,.5,.4,1.2,true); for(let k=0;k<5;k++) rb(R2,'woodGrain',-2.5+k*.35,-2.38+k*.35,.5,.53,.45,1.15);
+  const R3=RD.xNagaya3=xRoom('edo','町人の家（内職の家）','ちょうにん の いえ','裏長屋の一間。かまどと流しのある土間のほかは四畳半ほどの畳の間だけで、家族で暮らしながら縫い物などの内職をしました（中のようすは想像）。',[['町','日本橋']]);
+  shell(R3,5.4,7.4,3,{floor:'tsuchi',wall:'tsuchi',front:'shoji',ceil:'woodGrain',door:1.2,doorX:1.6,doorMat:'shoji',lamps:1});
+  rb(R3,'tatami',-2.7,.9,0,.4,-3.7,3.7,true,1.8); rb(R3,'plaster',1.4,2.7,0,.8,-3.7,-2.5,true); rb(R3,'black',1.75,2.35,.8,.84,-3.4,-2.8); rb(R3,'woodGrain',1.4,2.7,0,.75,-2.4,-1.4,true);
+  splitDoors([R,R2,R3],SDOORS.edo.map(o=>({px:o.x+o.nx*.55,pz:o.z+o.nz*.55,nx:o.nx,nz:o.nz})),(Q,l)=>addDoors(Q,l,{mark:true,w:1.2,h:1.9,col:'#26406a'})); }
 { const R=RD.xYaguraE=mkRoom(Object.assign({era:'edo'},doorAt(0,-9000,0,1),roomTxt('櫓の中（武具庫）','やぐら の なか','石垣の上の櫓は、ふだんは武具や兵糧を納める蔵として使われ、戦のときには兵が詰めて狭間から鉄砲や弓で守りました（中のようすは想像）。',[['役目','武具庫・守りの拠点']])));
   const w=8,d=4.6,h=3.4; shell(R,w,d,h,{floor:'floor',wall:'tsuchi',front:'tsuchi',ceil:'darkwood',door:1.4,doorMat:'woodGrain',lamps:2}); pillarsRow(R,'darkwood',w,d,h,2.6,false);
   for(let k=0;k<3;k++) rb(R,'darkwood',-3.6+k*1.3,-2.6+k*1.3,0,.5,-d/2+.2,-d/2+.8,true);
-  addDoors(R,YAGURA.filter(y=>ygPar(y,'edo')).map(y=>ygD(y,'edo')),{mark:true,w:1.2,h:2}); }
+  const R2=RD.xYaguraE2=xRoom('edo','櫓の中（兵糧蔵）','やぐら の なか','米や塩、味噌などの兵糧を納めた櫓。城にこもって戦うときに備えて、たくさんの米俵が積まれていました（中のようすは想像）。',[['役目','兵糧の蔵']]);
+  shell(R2,8,4.6,3.4,{floor:'floor',wall:'tsuchi',front:'tsuchi',ceil:'darkwood',door:1.4,doorMat:'woodGrain',lamps:2}); pillarsRow(R2,'darkwood',8,4.6,3.4,2.6,false);
+  for(const x of [-3.6,-1.2,1.2,3.6]) rb(R2,'darkwood',x-.9,x+.9,0,.15,-2.2,-1.1,true);
+  const R3=RD.xYaguraE3=xRoom('edo','櫓の中（狭間）','やぐら の なか','戦のときに兵が詰める櫓。壁にあけた狭間（丸・三角・四角の小窓）から、外の敵を鉄砲や弓でねらいました。ふだんは戸でふさいであります（中のようすは想像）。',[['役目','守りの拠点']]);
+  shell(R3,8,4.6,3.4,{floor:'floor',wall:'tsuchi',front:'tsuchi',ceil:'darkwood',door:1.4,doorMat:'woodGrain',lamps:2}); pillarsRow(R3,'darkwood',8,4.6,3.4,2.6,false);
+  for(let k=0;k<6;k++){ const x=-3.3+k*1.32; if(k%2) rg(R3,'black',new THREE.CylinderGeometry(.13,.13,.05,3).rotateX(Math.PI/2),x,1.15,-2.27,0); else rb(R3,'black',x-.13,x+.13,1.0,1.26,-2.3,-2.27); }
+  rb(R3,'darkwood',-3.8,3.8,.0,.4,-2.3,-1.9,true);
+  splitDoors([R,R2,R3],YAGURA.filter(y=>ygPar(y,'edo')).map(y=>ygD(y,'edo')),(Q,l)=>addDoors(Q,l,{mark:true,w:1.2,h:2})); }
 B=BS;
 /* 元吉原の揚屋（遊女を呼んで客をもてなした家。元吉原では客は揚屋に上がり、遊女が揚屋へ出向いた。中のようすは想像） */
 { const m=MISE.filter(q=>Math.abs(q.ry-Math.PI/2)<.01).sort((a,b)=>b.cz-a.cz)[0]; const R=RD.ageya=mkRoom(Object.assign({era:'edo',sub:'early'},doorAt(m.cx+m.F+.05,m.cz-m.eo,1,0),roomTxt('揚屋の座敷（元吉原）','あげや の ざしき','元吉原の揚屋。客はまず揚屋に上がり、そこへ遊女が呼ばれてきました。位の高い遊女は「太夫」とよばれ、和歌・書・琴・茶の湯などの教養も身につけていました（座敷のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']])));
@@ -3015,22 +3062,40 @@ B=BS;
 /* 吉原の見世（妓楼）の1階: 入口の土間、格子ごしに遊女が並ぶ「張見世」、帳場、2階の座敷へ上がる大階段（中のようすは想像）。
    同じ造りの見世が並ぶので、ひとつの部屋を横町の見世ぜんぶの入口から使う。仲之町ぞいは揚屋・引手茶屋の座敷へ */
 function yDoors(R,list,sub){ const oL=LATE; LATE=sub==='late'; let n=0; for(const d of list){ if(!d||!addDoors(R,[d])) continue; n++; (window.__DPP=window.__DPP||[]).push({era:'edo',sub,x:d.px+d.nx*.7,z:d.pz+d.nz*.7,sx:d.px-d.nx*.15,sz:d.pz-d.nz*.15,y:3.2}); } LATE=oL; return n; }
-function miseRoom(R){ const w=11,d=11,h=3.4,BENI=new THREE.Color('#8e2b1e');
-  shell(R,w,d,h,{floor:'tsuchi',wall:'plIn',front:'darkwood',ceil:'woodGrain',door:1.6,doorX:1.8,doorMat:'noren',lamps:3});
-  /* 張見世: 表の格子の内側、畳を敷いた一段高い間。土間との境にも紅殻の格子 */ rb(R,'tatami',-w/2,-.6,0,.5,.6,d/2,true,1.8); rb(R,'darkwood',-.7,-.5,0,.55,.6,d/2);
-  for(let z=.8;z<d/2-.1;z+=.22) rb(R,'darkwood',-.64,-.56,.55,2.6,z-.035,z+.035,false); rb(R,'darkwood',-.7,-.5,2.55,2.7,.6,d/2); rb(R,'darkwood',-w/2,-.5,2.55,2.7,.5,.7);
-  rb(R,'kinpaku',-w/2+.04,-w/2+.1,.9,2.4,1.2,d/2-.6); /* 奥の壁の金の屏風 */
-  /* 奥の板の間（上がり框）と帳場 */ rb(R,'woodGrain',-w/2,w/2,0,.5,-d/2,-1.2,true,1.2); rb(R,'darkwood',-w/2,w/2,.42,.52,-1.25,-1.15);
-  rb(R,'darkwood',-3.6,-1.2,.5,1.05,-3.4,-2.9,true); rb(R,'woodGrain',-3.7,-1.1,1.05,1.12,-3.5,-2.8); rb(R,'lacquer',-2.8,-2.2,1.12,1.4,-3.2,-3);
-  /* 2階へ上がる大階段（奥の右手） */ for(let k=0;k<9;k++){ const z0=-1.6-k*.42; rb(R,'woodGrain',w/2-2.2,w/2-.1,.5+k*.32,.82+k*.32,z0-.42,z0,true); } rb(R,'darkwood',w/2-2.3,w/2-2.2,.5,3.6,-5.4,-1.6);
-  /* 土間の天水桶と下駄箱、提灯 */ rb(R,'darkwood',w/2-.9,w/2-.1,0,1.4,1.2,3.2,true); rb(R,'woodGrain',w/2-.85,w/2-.15,1.4,1.46,1.2,3.2);
-  rb(R,'lantern',1.2,1.6,2.3,2.8,d/2-1.2,d/2-.8); }
-{ const R=RD.xGiro=mkRoom(Object.assign({era:'edo',sub:'early'},doorAt(0,-9000,0,1),roomTxt('見世（妓楼）の中（元吉原）','みせ の なか','元吉原の横町に並んだ見世（遊女屋）。入口の土間の脇、表通りに面した格子の内側の畳の間が「張見世」で、遊女たちが並んで客を待ちました。奥に帳場と、2階の座敷へ上がる大階段があります（中のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']])));
-  miseRoom(R); yDoors(R,MISE.filter(q=>Math.abs(Math.abs(q.ry)-Math.PI/2)>.01).map(machiD),'early'); }
-{ const R=RD.xGiroN=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(0,-9000,0,1),roomTxt('見世（妓楼）の中（新吉原）','みせ の なか','新吉原の江戸町・京町などに並んだ見世（妓楼）。表の紅殻格子の内側が「張見世」で、夕方になると遊女が並び、通りの客は格子ごしに眺めました。土間の奥に帳場、そのわきに2階の座敷へ上がる大階段。客は2階でもてなされました（中のようすは想像）。',[['場所','新吉原（いまの台東区千束）'],['時代','明暦3年（1657）〜']])));
-  miseRoom(R); yDoors(R,NMISE.map(machiD),'late'); }
-yDoors(RD.ageya,MISE.filter(q=>Math.abs(Math.abs(q.ry)-Math.PI/2)<.01).map(machiD),'early');
-yDoors(RD.hikite,NCHAYA.map(q=>machiD(Object.assign({},q,{eo:0}))),'late');
+M.niwa=M.niwa||std({color:0x1c3a1a,roughness:1});
+/* v: 0=中見世, 1=大見世（中庭つき）, 2=小見世 */
+function miseRoom(R,v){ v=v||0; const w=[11,14,8][v],d=[11,13,8.4][v],h=[3.4,3.8,3.1][v],dx=w/2-1.9,mx=v===2?-.4:-.6;
+  shell(R,w,d,h,{floor:'tsuchi',wall:'plIn',front:'darkwood',ceil:'woodGrain',door:1.6,doorX:dx,doorMat:'noren',lamps:v===1?4:3});
+  /* 張見世: 表の格子の内側、畳を敷いた一段高い間。土間との境にも紅殻の格子 */ const zf=v===2?.2:.6; rb(R,'tatami',-w/2,mx,0,.5,zf,d/2,true,1.8); rb(R,'darkwood',mx-.1,mx+.1,0,.55,zf,d/2);
+  for(let z=zf+.2;z<d/2-.1;z+=.22) rb(R,'darkwood',mx-.04,mx+.04,.55,2.6,z-.035,z+.035,false); rb(R,'darkwood',mx-.1,mx+.1,2.55,2.7,zf,d/2); rb(R,'darkwood',-w/2,mx+.1,2.55,2.7,zf-.1,zf+.1);
+  rb(R,v===2?'tl_f_shoji':'kinpaku',-w/2+.04,-w/2+.1,.9,2.4,zf+.6,d/2-.6);
+  /* 奥の板の間（上がり框）と帳場 */ const zb=v===2?-1.2:-1.2; rb(R,'woodGrain',-w/2,w/2,0,.5,-d/2,zb,true,1.2); rb(R,'darkwood',-w/2,w/2,.42,.52,zb-.05,zb+.05);
+  const cx=v===1?.4:-2.4,cz=zb-2; rb(R,'darkwood',cx-1.2,cx+1.2,.5,1.05,cz-.25,cz+.25,true); rb(R,'woodGrain',cx-1.3,cx+1.3,1.05,1.12,cz-.35,cz+.35); rb(R,'lacquer',cx-.3,cx+.3,1.12,1.4,cz-.2,cz);
+  /* 2階へ上がる大階段（奥の右手） */ const nS=v===2?7:9,rise=(h-.5)/(nS+1.5),run=v===2?.36:.42; for(let k=0;k<nS;k++){ const z0=zb-.4-k*run; rb(R,'woodGrain',w/2-2.1,w/2-.1,.5+k*rise,.5+(k+1)*rise,z0-run,z0,true); } rb(R,'darkwood',w/2-2.2,w/2-2.1,.5,h,zb-.4-nS*run,zb-.4);
+  /* 土間の天水桶と下駄箱、提灯 */ if(v!==2){ rb(R,'darkwood',w/2-.9,w/2-.1,0,1.4,zf+.6,zf+2.6,true); rb(R,'woodGrain',w/2-.85,w/2-.15,1.4,1.46,zf+.6,zf+2.6); }
+  rb(R,'lantern',dx-.6,dx-.2,2.3,2.8,d/2-1.2,d/2-.8);
+  /* 大見世の中庭: 奥の左、縁側に囲まれた小さな庭 */ if(v===1){ const x0=-w/2,x1=-1.6,z0=-d/2,z1=-2.4; rb(R,'dote',x0,x1,.0,.52,z0,z1,true,2); rb(R,'woodGrain',x1,x1+.08,.52,1.3,z0,z1); rb(R,'woodGrain',x0,x1+.08,.52,1.3,z1-.04,z1+.04); rb(R,'woodGrain',x0,x1+.08,1.25,1.31,z1-.06,z1+.06);
+    for(const [x,z,r] of [[-6,-5.2,.7],[-3.6,-5.6,.55],[-5.2,-3.4,.45]]) rg(R,'niwa',new THREE.SphereGeometry(r,10,8),x,.52+r*.8,z); rb(R,'stone',-4.6,-4,.52,.62,-4.4,-3.8); rb(R,'stone',-3.2,-2.7,.52,.6,-3.6,-3.1); } }
+{ const ttl=['見世（妓楼）の中（元吉原・中見世）','見世（妓楼）の中（元吉原・大見世）','見世（妓楼）の中（元吉原・小見世）'],add=['','見世の格もいちばん高い大見世で、奥には小さな中庭もありました。','格の低い小さな見世で、張見世も帳場もこぢんまりしています。'];
+  const Rs=[0,1,2].map(v=>{ const t=roomTxt('見世（妓楼）の中（元吉原）','みせ の なか','元吉原の横町に並んだ見世（遊女屋）。入口の土間の脇、表通りに面した格子の内側の畳の間が「張見世」で、遊女たちが並んで客を待ちました。奥に帳場と、2階の座敷へ上がる大階段があります（中のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']]); t.name=ttl[v]; t.text=t.text.replace('（中のようすは想像）',add[v]+'（中のようすは想像）'); const R=mkRoom(Object.assign({era:'edo',sub:'early'},doorAt(0,-9000,0,1),t)); miseRoom(R,v); return R; });
+  [RD.xGiro,RD.xGiro2,RD.xGiro3]=Rs; splitDoors(Rs,MISE.filter(q=>Math.abs(Math.abs(q.ry)-Math.PI/2)>.01).map(machiD),(Q,l)=>yDoors(Q,l,'early')); }
+{ const ttl=['見世（妓楼）の中（新吉原・中見世）','見世（妓楼）の中（新吉原・大見世）','見世（妓楼）の中（新吉原・小見世）'],add=['','格の高い大見世（大籬）で、奥には小さな中庭もありました。','格の低い小見世で、張見世も帳場もこぢんまりしています。'];
+  const Rs=[0,1,2].map(v=>{ const t=roomTxt('見世（妓楼）の中（新吉原）','みせ の なか','新吉原の江戸町・京町などに並んだ見世（妓楼）。表の紅殻格子の内側が「張見世」で、夕方になると遊女が並び、通りの客は格子ごしに眺めました。土間の奥に帳場、そのわきに2階の座敷へ上がる大階段。客は2階でもてなされました（中のようすは想像）。',[['場所','新吉原（いまの台東区千束）'],['時代','明暦3年（1657）〜']]); t.name=ttl[v]; t.text=t.text.replace('（中のようすは想像）',add[v]+'（中のようすは想像）'); const R=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(0,-9000,0,1),t)); miseRoom(R,v); return R; });
+  [RD.xGiroN,RD.xGiroN2,RD.xGiroN3]=Rs; splitDoors(Rs,NMISE.map(machiD),(Q,l)=>yDoors(Q,l,'late')); }
+/* 揚屋・引手茶屋の座敷のほかの造り: v1=宴の座敷、v2=庭に面した奥座敷 */
+function zashikiRoom(R,v){ const w=v===1?13:9,d=v===1?9:8,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'plIn',front:'tl_f_shoji',ceil:'woodGrain',door:1.6,doorMat:'noren',lamps:v===1?4:2}); pillarsRow(R,'darkwood',w,d,h,2.7,false);
+  if(v===1){ rb(R,'kinpaku',-w/2+.05,-w/2+.12,.4,2.6,-3,3); rb(R,'woodGrain',-w/2+.1,w/2-.1,2.55,2.62,-d/2+.05,-d/2+.15); }
+  else { /* 奥は縁側と坪庭（障子をあけはなした先） */ const zg=-d/2+1.4; rb(R,'dote',-w/2,w/2,0,.03,-d/2,zg,true,2); rb(R,'woodGrain',-w/2,w/2,0,.08,zg,zg+1,false,1.2); rb(R,'darkwood',-w/2,w/2,0,.12,zg+.95,zg+1.05);
+    for(const [x,r] of [[-3.2,.6],[-1.2,.45],[2.4,.7],[3.6,.4]]) rg(R,'niwa',new THREE.SphereGeometry(r,10,8),x,r*.8,-d/2+.7); rb(R,'darkwood',-w/2,w/2,0,1.9,-d/2+.02,-d/2+.08); rb(R,'roof',-w/2,w/2,1.9,1.98,-d/2,-d/2+.3); rb(R,'stone',.2,.8,0,.12,-d/2+.4,-d/2+1); rb(R,'darkwood',-1.4,-.2,0,.25,-1.2,-.2,true); } }
+
+{ const t1=roomTxt('揚屋の座敷（元吉原・宴）','あげや の ざしき','元吉原の揚屋の大座敷。客は仲間を招いて膳を並べ、呼ばれた太夫や芸を見せる者たちとともに宴を楽しみました（座敷のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']]),
+        t2=roomTxt('揚屋の座敷（元吉原・奥座敷）','あげや の おくざしき','元吉原の揚屋の奥座敷。庭に面した静かな座敷で、太夫は香をたいたり、手紙をしたためたりしてもてなしました（座敷のようすは想像）。',[['場所','元吉原（いまの日本橋人形町）'],['時代','元和3年（1617）〜明暦3年（1657）']]);
+  const A2=RD.ageya2=mkRoom(Object.assign({era:'edo',sub:'early'},doorAt(0,-9000,0,1),t1)),A3=RD.ageya3=mkRoom(Object.assign({era:'edo',sub:'early'},doorAt(0,-9000,0,1),t2)); zashikiRoom(A2,1); zashikiRoom(A3,2);
+  splitDoors([RD.ageya,A2,A3],MISE.filter(q=>Math.abs(Math.abs(q.ry)-Math.PI/2)<.01).map(machiD),(Q,l)=>yDoors(Q,l,'early')); }
+{ const t1=roomTxt('引手茶屋の座敷（新吉原・宴）','ひきてぢゃや の ざしき','新吉原の引手茶屋の大座敷。芸者の三味線や幇間（たいこもち）の芸で座をにぎやかにし、花魁の迎えを待ちました（座敷のようすは想像）。',[['場所','新吉原・仲之町（いまの台東区千束）'],['時代','明暦3年（1657）〜']]),
+        t2=roomTxt('引手茶屋の座敷（新吉原・奥座敷）','ひきてぢゃや の おくざしき','新吉原の引手茶屋の奥座敷。小さな庭に面した座敷で、客はお茶やたばこで一服しながら案内を待ちました（座敷のようすは想像）。',[['場所','新吉原・仲之町（いまの台東区千束）'],['時代','明暦3年（1657）〜']]);
+  const H2=RD.hikite2=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(0,-9000,0,1),t1)),H3=RD.hikite3=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(0,-9000,0,1),t2)); zashikiRoom(H2,1); zashikiRoom(H3,2);
+  splitDoors([RD.hikite,H2,H3],NCHAYA.map(q=>machiD(Object.assign({},q,{eo:0}))),(Q,l)=>yDoors(Q,l,'late')); }
 
 /* 浅草寺の本堂（観音堂）の中（江戸後期だけ）。手前の外陣は土間で、だれでも履物のまま入ってお参りした。
    朱塗りの柱と黒い格子で仕切った奥が内陣で、まん中の金色の御宮殿に本尊の観音さま（秘仏）をまつる。内陣の正面の上に扁額「施無畏」、前に横長の大きな賽銭箱（細部は想像） */
@@ -3779,10 +3844,34 @@ const YLAN=[],YDOOR=[],YPROP=[];
   let kk=0; for(const m of NMISE){ if(kk++%3) continue; const c=Math.cos(m.ry),s=Math.sin(m.ry); npc(kk%2?'yw_koshi':'yw_hashi',[[m.cx+(m.eo+1.6)*c+(m.F+.7)*s,m.cz-(m.eo+1.6)*s+(m.F+.7)*c]],0,'見世の遊女','見世の格子の内に並んで客を待つのを「張見世」と申します。',{fixed:true,sub:'late'}); }
   for(const q of NCHAYA){ const c=Math.cos(q.ry),s=Math.sin(q.ry); for(const off of [-1.2,1.2]) LDECO.push([off>0?'yp_lan_shiro':'yp_lan_aka',q.cx+off*c+(q.F+.6)*s,q.cz-off*s+(q.F+.6)*c,2.0]); } }
 { const G=RD.hikite; rp(G,'yz_koto',-2.4,0,.2,{},true,['花魁','ようこそ。琴をひとつ、お聞かせいたしましょう。']); rp(G,'yz_shami',-.6,0,-3.2,{},true,['芸者','三味線と唄で、お座敷をにぎやかにいたします。']); rp(G,'yd_kamuro_b',-3.6,0,2.2,{},true,['禿','花魁さまのお道具をお持ちしました。']);
-{ const G=RD.xGiro; rp(G,'yw_tayu_za',-3.6,.5,3.6,{},true,['張見世の遊女','格子の内に並んで、お客を待っております。']); rp(G,'yw_kagami',-2,.5,2.2,{},true,['遊女','身じたくをととのえて、見世に出るところでございます。']); rp(G,'yw_tegami',-4.4,.5,1.6,{},true,['遊女','なじみのお客へ、文（手紙）をしたためております。']);
-  rp(G,'yz_jochu',-2.4,.5,-4.1,{},true,['帳場の女','いらっしゃいまし。お上がりは2階でございます。']); rp(G,'yd_kamuro_a',3.2,0,-.4,{},true,['禿','姐さんの使いで、走りまわっております。']); }
-{ const G=RD.xGiroN; rp(G,'yw_tayu_za',-3.6,.5,3.6,{},true,['張見世の花魁','夕暮れになると、こうして格子の内に並びます。']); rp(G,'lp_shinzo',-2,.5,2.4,{},true,['新造','見習いの新造でございます。姐さんについて、芸やしきたりを習っております。']); rp(G,'yw_kagami',-4.4,.5,1.6,{},true,['遊女','髪をととのえて、見世に出る支度でございます。']);
-  rp(G,'lp_okami',-2.4,.5,-4.1,{},true,['遣手','見世のきりもりと、遊女たちの世話を受け持っております。']); rp(G,'yd_kamuro_b',3.2,0,-.4,{},true,['禿','花魁さまのお使いでございます。']); }
+/* 見世（妓楼）3種: 0=中見世 1=大見世 2=小見世 */
+[[RD.xGiro,RD.xGiro2,RD.xGiro3],[RD.xGiroN,RD.xGiroN2,RD.xGiroN3]].forEach((Rs,late)=>Rs.forEach((G,v)=>{ const w=[11,14,8][v],d=[11,13,8.4][v],zf=v===2?.2:.6,cx=v===1?.4:-2.4,x0=-w/2;
+  const za=[['yw_tayu_za',late?'張見世の花魁':'張見世の遊女',late?'夕暮れになると、こうして格子の内に並びます。':'格子の内に並んで、お客を待っております。'],[late?'lp_shinzo':'yw_kagami',late?'新造':'遊女',late?'見習いの新造でございます。姐さんについて、芸やしきたりを習っております。':'身じたくをととのえて、見世に出るところでございます。'],['yw_tegami','遊女','なじみのお客へ、文（手紙）をしたためております。'],['yw_kagami','遊女','髪をととのえて、見世に出る支度でございます。']];
+  const pos=v===1?[[x0+1.6,d/2-1.4],[x0+3.2,d/2-2.2],[x0+1.4,zf+1.4],[x0+4.6,d/2-1.2]]:v===2?[[x0+1.2,d/2-1.2],[x0+2.6,zf+1.2]]:[[x0+1.9,d/2-1.9],[x0+3.5,zf+1.6],[x0+1.1,zf+1]];
+  pos.forEach((p,n)=>rp(G,za[n][0],p[0],.5,p[1],{},true,[za[n][1],za[n][2]]));
+  if(v===2) rp(G,'yp_teishu',cx,.5,-3.9,{},true,['見世の主','小さな見世ですが、心をこめておもてなしいたします。']);
+  else rp(G,v===1?'yp_yarite':late?'lp_okami':'yz_jochu',cx,.5,-3.9,{},true,v===1?['遣手','遊女たちの世話と見世の取りしきりは、この遣手の役目でございます。']:late?['遣手','見世のきりもりと、遊女たちの世話を受け持っております。']:['帳場の女','いらっしゃいまし。お上がりは2階でございます。']);
+  rp(G,late?'yd_kamuro_b':'yd_kamuro_a',v===2?.4:1,0,-.3,{},true,['禿',late?'花魁さまのお使いでございます。':'姐さんの使いで、走りまわっております。']);
+  if(v===1){ rp(G,'yp_wakaishu',2.2,0,2.4,{},true,['若い衆','いらっしゃいまし。お履物をお預かりいたします。']); rp(G,'toro2',-4.6,.52,-5.2,{}); rp(G,'yi_byobu',x0+.6,.5,zf+3.4,{}); } }));
+/* 揚屋・引手茶屋の座敷のほかの2種（宴・奥座敷） */
+{ const G=RD.ageya2; for(const [x,z] of [[-3,-1.4],[-1,-1.6],[1,-1.6],[3,-1.4]]) rp(G,'yi_zen',x,0,z,{}); rp(G,'yi_choshi',0,0,-.8,{});
+  rp(G,'yz_samurai',-3,0,-2.4,{},true,['客の武士','今宵は仲間とにぎやかにやろうぞ。']); rp(G,'yz_chonin',3,0,-2.4,{},true,['客の商人','商いがうまくいったお祝いでございます。']);
+  rp(G,'yo_tayu_sakazuki',0,0,-3.2,{},true,['太夫','おひとつ、どうぞ。']); rp(G,'yz_shami',-5,0,-3.3,{},true,['三味線を弾く女','にぎやかな一曲を弾きましょう。']); rp(G,'yd_kamuro_a',4.8,0,-3,{},true,['禿','お酒のおかわりをお持ちしました。']); }
+{ const G=RD.ageya3; rp(G,'yw_tegami',-2.4,0,.2,{},true,['太夫','お客さまへの文を、香をたきしめた紙にしたためております。']); rp(G,'yi_tabakobon',-.8,.25,-.7,{}); rp(G,'yi_kabin',3.4,0,-1.2,{}); rp(G,'yd_kamuro_b',2.2,0,.8,{},true,['禿','お庭の花がきれいに咲きました。']); }
+{ const G=RD.hikite2; for(const [x,z] of [[-3,-1.4],[-1,-1.6],[1,-1.6],[3,-1.4]]) rp(G,'yi_zen',x,0,z,{}); rp(G,'yi_choshi',0,0,-.8,{});
+  rp(G,'yz_chonin',-3,0,-2.4,{},true,['客','花魁のお迎えを、ここで待っております。']); rp(G,'lp_geisha',0,0,-3.2,{},true,['芸者','三味線と唄で、お座敷をにぎやかにいたします。']); rp(G,'lp_taikomochi',3,0,-2.6,{},true,['幇間（たいこもち）','へい、旦那。ひとつ芸をお目にかけましょう。']); rp(G,'yo_tayu2',-5,0,-3.2,{},true,['花魁','お待たせいたしました。']); }
+{ const G=RD.hikite3; rp(G,'lp_okami',-2.4,0,.2,{},true,['茶屋の女将','ご案内の支度ができるまで、こちらで一服なさいまし。']); rp(G,'yi_tabakobon',-.8,.25,-.7,{}); rp(G,'yi_kabin',3.4,0,-1.2,{}); rp(G,'yz_chonin',2,0,.6,{},true,['客','ここの庭はよく手入れされておるのう。']); }
+/* 日本橋の町家・大名屋敷・町人の家・櫓のほかの造り */
+{ const G=RD.xMachi; rp(G,'q_merchant',1.3,.45,-3.4,{},true,['呉服屋の手代','この反物などいかがでしょう。京から下ったばかりの新しい柄でございます。']); rp(G,'q_oldw',-2.2,0,-1.4,{},true,['客','孫の晴れ着の反物を見に来たんだよ。']); }
+{ const G=RD.xMachi2; rp(G,'q_merchant',1.8,.45,-4.2,{},true,['米屋の主','米は一俵、四斗入り。量って売りますよ。']); for(const [x,z] of [[-2.8,-1],[-2.8,.3],[-2.8,1.6],[2.8,.8]]) rp(G,'tawara',x,0,z,{},true); rp(G,'kome',2.6,0,-.8,{},true); rp(G,'w_straw',-.6,0,2.2,{},true,['米を買いに来た男','長屋のみんなの分をまとめて買いに来た。']); }
+{ const G=RD.xMachi3; rp(G,'roujin',-1.3,.45,-2,{},true,['薬種問屋の主','どこが悪いのか、まずは話を聞かせてくだされ。']); rp(G,'box_s',-1.3,1.01,-.95,{}); rp(G,'shonin',2.2,0,-2.4,{},true,['薬を求める客','かぜ薬をひとつ、いただきたい。']); }
+{ const G=RD.xBuke2; rp(G,'kakejiku',-3,.22,-3.85,{}); rp(G,'ikebana',-2.2,.22,-3.5,{}); rp(G,'sam_kami',1.6,0,-1.2,{},true,['屋敷の主','書院では、書を読んだり大事なお客と会ったりするのじゃ。']); }
+{ const G=RD.xBuke3; rp(G,'pot',3.2,.55,-2,{}); for(const x of [-5.6,-3.9,-2.2]) rp(G,'kama',x,.95,-4.4,{}); rp(G,'barrels',-5.2,0,-.6,{},true); rp(G,'tawara',-5.2,0,1.2,{},true); rp(G,'bucket',-1.4,0,-3.4,{});
+  rp(G,'w_tray',-1,0,0,{},true,['台所の下役','家臣みんなのご飯を炊くのは、たいへんな仕事でございます。']); rp(G,'lady_tray',4.4,.5,-.4,{},true,['女中','お膳をお運びいたします。']); }
+{ const G=RD.xNagaya2; rp(G,'roujin',-1.6,0,2,{},true,['桶屋','板をならべて竹のたがで締めれば、水ももれない桶になる。']); rp(G,'bucket',1.4,0,-.8,{}); rp(G,'bucket',2.2,0,-1.6,{}); rp(G,'barrels',2,0,-3,{},true); }
+{ const G=RD.xNagaya3; rp(G,'ng_saiho',-1.2,.4,-.8,{},true,['内職のおかみさん','頼まれた縫い物を仕上げて、すこしでも暮らしの足しにするのさ。']); rp(G,'ng_komori',-.6,.4,1.8,{},true,['子守の娘','ねんねん、ころりよ。']); rp(G,'andon',-2.2,.4,-2.9,{}); }
+{ const G=RD.xYaguraE2; for(const x of [-3.9,-3.1,-1.5,-.7,.9,1.7,3.3]) rp(G,'tawara',x,.15,-1.65,{}); rp(G,'kome',-3,0,.9,{},true); rp(G,'obj_hyorou',2.8,0,.9,{},true); }
+{ const G=RD.xYaguraE3; rp(G,'guns',-2.6,.4,-2.1,{}); rp(G,'arrows',-1,.4,-2.1,{}); rp(G,'bows',1,.4,-2.1,{}); rp(G,'spears',2.6,.4,-2.1,{}); rp(G,'ashigaru',3,0,.8,{},true,['番の足軽','戦のときは、この狭間から鉄砲で敵をねらうのじゃ。']); }
   rp(G,'yz_chonin',2.6,0,1.6,{flip:true},true,['客の町人','いやはや、愉快、愉快。']); rp(G,'yz_samurai',2.4,0,-.6,{flip:true},true,['客の侍','引手茶屋で待っておれば、花魁が迎えに来るのじゃ。']); rp(G,'yz_jochu',.8,0,2.6,{flip:true},true,['茶屋の女中','お酒をお注ぎいたします。']); rp(G,'lp_taikomochi',3.2,0,.2,{flip:true},true,['幇間（たいこもち）','お座敷を盛り上げるのが、あっしの役目でございます。']);
   rp(G,'lp_okami',3.8,0,-3.4,{},true,['引手茶屋の女将','新吉原では、お客さまはまず引手茶屋へ。ここから妓楼へご案内いたします。']);
   rp(G,'yi_byobu',-4.85,0,0,{yaw:Math.PI/2}); rp(G,'yi_zen',1.4,0,-.6,{}); rp(G,'yi_zen',1.6,0,1.4,{}); rp(G,'yi_choshi',1,0,.5,{}); rp(G,'yi_tabakobon',1.3,0,-1.7,{}); rp(G,'yi_kabin',-4.5,.25,-1.1,{}); rp(G,'i_andon',4.2,0,3.4); rp(G,'i_andon',-4.2,0,-3.6); }
