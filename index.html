@@ -2372,8 +2372,10 @@ const TP=planKeep('edo'); TEN.edo=Object.assign({par:GEe},TP); TEN.modern=Object
   { const r0=T[0],r1=T[1],r2=T[2],r3=T[3];
     const ch=(L,face,W,H,k)=>{ const ns=face==='n'||face==='s',s=face==='s'||face==='e'?1:-1,off=(ns?L.P[0][1]:L.P[1][0])+TA.oh*k,y=L.Y+L.h+L.rise*.2;
       if(ns) chidori(KX,cx,y,cz+s*off,s>0?0:Math.PI,W,H,mats); else chidori(KX,cx+s*off,y,cz,s>0?Math.PI/2:-Math.PI/2,W,H,mats); };
+    const c0=KX.children.length;
     for(const f of ['n','s','e','w']){ ch(r0,f,f==='e'||f==='w'?9.4:8.6,3.2,.5); ch(r1,f,f==='e'||f==='w'?7.2:6.6,2.7,.45); }
-    for(const f of ['n','s']) ch(r2,f,6.0,2.4,.45); for(const f of ['e','w']) ch(r3,f,5.0,2.1,.45); }
+    for(const f of ['n','s']) ch(r2,f,6.0,2.4,.45); for(const f of ['e','w']) ch(r3,f,5.0,2.1,.45);
+    /* 千鳥破風の奥は上の階の床の内側まで入りこむので、天守の中にいるあいだは隠す */ window.CHIDORI=KX.children.slice(c0); }
   /* 穴蔵の入口の上の庇と門柱 */ { const z=cz+TZ.bd/2+.05; for(const s of [-1,1]){ const p=mesh(new THREE.BoxGeometry(.4,3.7,.4),M.darkwood); p.position.set(cx+s*1.65,g0+1.85,z+.2); KX.add(p); }
     const l=mesh(new THREE.BoxGeometry(4,.35,.5),M.darkwood); l.position.set(cx,g0+3.75,z+.2); KX.add(l); const r=mesh(gableRoofGeo(4.8,1.8,.6,.3,.2),M.roof); r.position.set(cx,g0+3.95,z+.5); KX.add(r); }
   /* 小天守台の枡形（江戸時代）: 石垣と土塀で囲み、東に門。現代は天守台へ上る坂と、その両わきの石垣 */
@@ -3315,7 +3317,7 @@ const TIMES=[
   {name:'夕',top:'#33467a',hor:'#f2a467',sun:[-.86,.09,.42],sunC:'#ff9550',sunI:1.5,hs:'#a993a7',hg:'#4b3b33',hi:.6,fog:'#c99580',exp:1.05,night:.15,lamp:.7},
   {name:'夜',top:'#060914',hor:'#1b2440',sun:[-.25,.62,.55],sunC:'#a8bde8',sunI:.3,hs:'#3a4a72',hg:'#101114',hi:.45,fog:'#182038',exp:1.15,night:1,lamp:2.2}];
 let timeIdx=1; const sunDir=V3(0,1,0);
-function updatePJ(dt){ const night=TIMES[timeIdx].night>.5&&MODE==='edo'; if(typeof ywNight==='function') ywNight(MODE==='edo'?TIMES[timeIdx].night:0); if(typeof lateFX==='function') lateFX(dt); if(lantMesh) lantMesh.visible=night; nightLight.intensity=night?2.4:0; for(const b of boats) if(b.g.userData.torch) b.g.userData.torch.material=night?lantMat:M.lantern; }
+function updatePJ(dt){ const night=TIMES[timeIdx].night>.5&&MODE==='edo'; if(typeof ywNight==='function') ywNight(MODE==='edo'?TIMES[timeIdx].night:0); if(typeof lateFX==='function') lateFX(dt); { if(!window.KROOF){ const set=new Set([M.roofCu,M.seigaiha,M.ridge,M.gold,M.aoiDisc,M.roof].filter(Boolean)); window.KROOF=[]; KX.traverse(o=>{ if(o.isMesh&&set.has(o.material)) window.KROOF.push(o); }); } const v=!(P.level>=0&&!P.room); if(window.KROOF.length&&window.KROOF[0].visible!==v) for(const o of window.KROOF) o.visible=v; } if(lantMesh) lantMesh.visible=night; nightLight.intensity=night?2.4:0; for(const b of boats) if(b.g.userData.torch) b.g.userData.torch.material=night?lantMat:M.lantern; }
 function applyTime(i){ timeIdx=i; const T=TIMES[i]; sunDir.set(...T.sun).normalize();
   skyMat.uniforms.top.value.set(T.top); skyMat.uniforms.hor.value.set(T.hor); skyMat.uniforms.sunDir.value.copy(sunDir); skyMat.uniforms.sunCol.value.set(T.sunC).multiplyScalar(T.night>.5?.5:1); skyMat.uniforms.stars.value=T.night>.5?.9:0;
   sun.color.set(T.sunC); sun.intensity=T.sunI; hemi.color.set(T.hs); hemi.groundColor.set(T.hg); hemi.intensity=T.hi; scene.fog.color.set(T.fog); renderer.toneMappingExposure=T.exp;
@@ -3894,7 +3896,7 @@ const RUIN=new THREE.Group(); RUIN.visible=false; GE.add(RUIN);
   for(let i=0;i<60;i++){ const m=mesh(new THREE.BoxGeometry(.8+rnd(),.3,.6+rnd()),M.roofCu); m.position.set(TA.cx+(rnd()-.5)*22,y+.2,TA.cz+(rnd()-.5)*24); m.rotation.set(rnd(),rnd()*3,rnd()); RUIN.add(m); }
   for(let i=0;i<120;i++){ const m=mesh(new THREE.BoxGeometry(.4,1.2+rnd()*2.4,.4),burnt); m.position.set(GOT.cx+(rnd()-.5)*GOT.w,GOT.y+.6,GOT.cz+(rnd()-.5)*GOT.d); m.rotation.set((rnd()-.5)*.6,rnd()*3,(rnd()-.5)*.6); RUIN.add(m); } }
 function flName(){ const F=FL[P.level]; if(F&&F.zones) for(const z of F.zones) if(inR(z.r,P.x,P.z,0)) return z.name; return F?F.name:''; }
-function keepState(s){ KX.visible=s!=='gone'; KXI.visible=s!=='gone'; GOTG.visible=s!=='gone'&&s!=='keepgone'; RUIN.visible=s==='gone'||s==='burning'; }
+function keepState(s){ KX.userData.v=s!=='gone'; KX.visible=s!=='gone'; KXI.visible=s!=='gone'; GOTG.visible=s!=='gone'&&s!=='keepgone'; RUIN.visible=s==='gone'||s==='burning'; }
 /* ---------- 部隊（兵の集団）---------- */
 const K_INF=['samurai_a','ashigaru','yari_a','samurai_b','t_yari','sam_haori'],K_LINE=K_INF,
   T_INF=[],T_LEAD=[],CIV=['q_merchant','okami_p','w_box','ninpu','q_oldw','az_kodomo','az_omi','w_yoke','q_traveler','musume_r','az_sokenso','q_child'],
