@@ -2308,7 +2308,7 @@ function kmTower(par,cx,y0,cz,levels,o){ o=o||{}; const g=new THREE.Group(); g.p
       kmSide(g,mx,L.Y,mz,len+.02,L.h,ry,wins,{noShutter:o.noShutter,wall:o.wall});
       /* 下端の水切りと上端の長押 */ const m=mesh(new THREE.BoxGeometry(len,.14,.14),M.black,false,false); m.position.set(mx+nx2*.03,L.Y+.07,mz+nz2*.03); m.rotation.y=ry; g.add(m);
       if(o.nageshi){ const n2=mesh(new THREE.BoxGeometry(len,.12,.1),o.nageshi,false,false); n2.position.set(mx+nx2*.06,L.Y+L.h-.55,mz+nz2*.06); n2.rotation.y=ry; g.add(n2); } }
-    if(nx){ const [rg,fr]=polyRoofParts(L.O,nx.P,L.rise,.55); const r=mesh(rg,roofM); r.position.y=L.Y+L.h-.1; g.add(r); const f=mesh(fr,o.gold?M.gold:M.ridge); f.position.y=L.Y+L.h-.1; g.add(f);
+    if(nx){ const [rg,fr]=polyRoofParts(L.O,nx.P,L.rise,.55); const r=mesh(rg,o.under?o.under[0]:roofM); r.position.y=L.Y+L.h-.1; g.add(r); if(o.under){ const r2=mesh(rg,o.under[1]); r2.position.y=L.Y+L.h-.1; g.add(r2); } const f=mesh(fr,o.gold?M.gold:M.ridge); f.position.y=L.Y+L.h-.1; g.add(f);
       /* 軒裏 */ const und=new THREE.Shape(); L.O.forEach(([x,z],j)=>j?und.lineTo(x,-z):und.moveTo(x,-z)); und.closePath(); const hp=new THREE.Path(); L.P.slice().reverse().forEach(([x,z],j)=>j?hp.lineTo(x,-z):hp.moveTo(x,-z)); hp.closePath(); und.holes.push(hp);
       const ug=new THREE.ShapeGeometry(und); ug.rotateX(-Math.PI/2); const um=mesh(ug,o.eave||M.darkwood,false,false); um.position.y=L.Y+L.h-.12; g.add(um); }
     else { let a=0,b=0; for(const [x,z] of P){ a=Math.max(a,x); b=Math.max(b,z); } const r=b>a?hipRoof(2*b,2*a,oh+.3+(L.deck||0),mats):hipRoof(2*a,2*b,oh+.3+(L.deck||0),mats); r.position.y=L.Y+L.h-.1; if(b>a) r.rotation.y=Math.PI/2; g.add(r); } });
@@ -2349,19 +2349,30 @@ function planKeep(era){ const cx=TA.cx,cz=TA.cz,FL=[],ST=[],g0=TZ.g0,ti=(TZ.bw/2
 B=BS; curSet=BSETS.shared;
 const KX=new THREE.Group(); GEe.add(KX);
 const TMATS={roof:M.roofCu,gable:M.seigaiha,gold:false,orn:true,trim:M.roofCu,crest:M.aoiDisc,shs:1.3};
+/* 寛永の天守の外壁: 下は黒い銅板張り、軒の下は白漆喰の帯（東京国立博物館・TOPPANの復元CGなどにならう） */
+{ const c=makeCanvas(256,512),g=c.getContext('2d'); g.fillStyle='#e9e7e1'; g.fillRect(0,0,256,205); for(let k=0;k<1200;k++){ g.fillStyle=`rgba(${120+Math.random()*60|0},${120+Math.random()*60|0},${110+Math.random()*60|0},.06)`; g.fillRect(Math.random()*256,Math.random()*205,2+Math.random()*6,2+Math.random()*4); }
+  g.fillStyle='#202125'; g.fillRect(0,205,256,307); for(let x=0;x<=256;x+=64){ g.fillStyle='rgba(120,125,130,.35)'; g.fillRect(x,209,2,303); } for(const y of [330,430]){ g.fillStyle='rgba(120,125,130,.3)'; g.fillRect(0,y,256,2); }
+  for(let k=0;k<1500;k++){ g.fillStyle=`rgba(${60+Math.random()*40|0},${62+Math.random()*40|0},${70+Math.random()*40|0},.12)`; g.fillRect(Math.random()*256,209+Math.random()*303,2+Math.random()*5,1+Math.random()*3); }
+  g.fillStyle='#141416'; g.fillRect(0,200,256,10); M.kmWE=std({map:toTex(c),roughness:.6,metalness:.12,side:THREE.DoubleSide}); }
+/* 天守台の石垣: 四角く整えた石をすき間なく積んだ「切込接ぎ」 */
+{ const c=makeCanvas(512,512),g=c.getContext('2d'); g.fillStyle='#8c8a84'; g.fillRect(0,0,512,512); let seed=7; const R=()=>(seed=(seed*9301+49297)%233280)/233280;
+  for(let r=0;r<6;r++){ const y0=r*512/6,h=512/6; let x=-R()*120; while(x<512){ const w=110+R()*110,v=135+R()*50|0; g.fillStyle=`rgb(${v},${v-2},${v-8})`; g.fillRect(x+2,y0+2,w-4,h-4);
+      for(let k=0;k<60;k++){ const q=v-25+R()*50|0; g.fillStyle=`rgba(${q},${q},${q-6},.35)`; g.fillRect(x+2+R()*(w-8),y0+2+R()*(h-8),2+R()*5,2+R()*4); } g.fillStyle='rgba(255,255,255,.12)'; g.fillRect(x+2,y0+2,w-4,3); x+=w; } }
+  const t=toTex(c); M.kirikomi=std({map:t,bumpMap:t,bumpScale:.6,roughness:.88,side:THREE.DoubleSide}); M.eaveW=std({color:0x262624,roughness:.9,side:THREE.DoubleSide}); }
+M.roofCuF=M.roofCu.clone(); M.roofCuF.side=THREE.FrontSide; M.eaveB=std({color:0x3a3a36,roughness:.95,side:THREE.BackSide});
 SHACHI_GOLD=true;
-const KT=kmTower(KX,TA.cx,TA.y0,TA.cz,TLV,{roof:M.roofCu,gable:M.seigaiha,topGold:true,crest:M.aoiDisc,shs:1.35,oh:TA.oh,eave:M.black,nageshi:M.black});
+const KT=kmTower(KX,TA.cx,TA.y0,TA.cz,TLV,{roof:M.roofCu,gable:M.seigaiha,topGold:true,crest:M.aoiDisc,shs:1.35,oh:TA.oh,eave:M.eaveW,wall:M.kmWE,under:[M.roofCuF,M.eaveB]});
 SHACHI_GOLD=false;
 const TP=planKeep('edo'); TEN.edo=Object.assign({par:GEe},TP); TEN.modern=Object.assign({par:GM},TP,{none:true});
 { const cx=TA.cx,cz=TA.cz,g0=TZ.g0,bh=TZ.bh,T=TLV,a=TZ.bw/2-TZ.bat,b=TZ.bd/2-TZ.bat;
   /* 天守台: 江戸時代（寛永）は南面に穴蔵の入口。現代（万治の天守台）は入口のない御影石の石垣で、上に登れる */
-  const base=mesh(mushaGeo(a,b,bh+.02,TZ.bat,[{f:0,x0:-1.45,x1:1.45,y1:3.6}],1.25),wallN,false,true); base.position.set(cx,g0,cz); KX.add(base);
-  const baseM=mesh(mushaGeo(a,b,bh+.02,TZ.bat,null,1.25),M.mikage,false,true); baseM.position.set(cx,g0,cz); GM.add(baseM);
+  const base=mesh(mushaGeo(a,b,bh+.02,TZ.bat,[{f:0,x0:-1.45,x1:1.45,y1:3.6}],1.25),M.kirikomi,false,true); base.position.set(cx,g0,cz); KX.add(base);
+  const baseM=mesh(mushaGeo(a,b,bh+.02,TZ.bat,null,1.25),M.kirikomi,false,true); baseM.position.set(cx,g0,cz); GM.add(baseM);
   mushaCorners(BS.sangi,cx,g0,cz,a,b,bh,TZ.bat,1.25);
   { M.stoneKtop=M.stoneKtop||M.stoneK.clone(); const m=mesh(boxUVGeo(2*a,.3,2*b,3,3),M.stoneKtop,false,true); m.position.set(cx,g0+bh+.12,cz); KX.add(m); const m2=mesh(boxUVGeo(2*a,.3,2*b,3,3),M.mikage,false,true); m2.position.set(cx,g0+bh-.14,cz); GM.add(m2); }
   curSet=BSETS.early; block(cx-TZ.bw/2+.4,cz-TZ.bd/2+.4,cx+TZ.bw/2-.4,cz+TZ.bd/2-.6,'castle'); curSet=BSETS.shared;
   /* 江戸後期: 明暦の大火のあと万治元年（1658）に築き直した天守台（いまと同じ石垣）。天守は建てられず、上に登れる */
-  { const bL=mesh(mushaGeo(a,b,bh+.02,TZ.bat,null,1.25),wallN,false,true); bL.position.set(cx,g0,cz); GL.add(bL); const tL=mesh(boxUVGeo(2*a,.3,2*b,3,3),M.stoneK,false,true); tL.position.set(cx,g0+bh-.14,cz); GL.add(tL);
+  { const bL=mesh(mushaGeo(a,b,bh+.02,TZ.bat,null,1.25),M.kirikomi,false,true); bL.position.set(cx,g0,cz); GL.add(bL); const tL=mesh(boxUVGeo(2*a,.3,2*b,3,3),M.stoneK,false,true); tL.position.set(cx,g0+bh-.14,cz); GL.add(tL);
     curSet=BSETS.late; for(const [x0,x1,z0,z1] of [[cx-TZ.bw/2,cx-a+.6,cz-TZ.bd/2,cz+TZ.bd/2],[cx+a-.6,cx+TZ.bw/2,cz-TZ.bd/2,cz+TZ.bd/2],[cx-TZ.bw/2,cx+TZ.bw/2,cz-TZ.bd/2,cz-b+.6]]) block(x0,z0,x1,z1,'castle');
     block(cx-TZ.bw/2,cz+b-.6,cx-5.4,cz+TZ.bd/2,'castle'); block(cx+5.4,cz+b-.6,cx+TZ.bw/2,cz+TZ.bd/2,'castle'); curSet=BSETS.shared; }
   { curSet=BSETS.modern; for(const [x0,x1,z0,z1] of [[cx-TZ.bw/2,cx-a+.6,cz-TZ.bd/2,cz+TZ.bd/2],[cx+a-.6,cx+TZ.bw/2,cz-TZ.bd/2,cz+TZ.bd/2],[cx-TZ.bw/2,cx+TZ.bw/2,cz-TZ.bd/2,cz-b+.6]]) block(x0,z0,x1,z1,'castle');
