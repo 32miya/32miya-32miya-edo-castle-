@@ -1856,6 +1856,9 @@ for(const n in ED_MK){ const c=makeCanvas(512,512),t=new THREE.CanvasTexture(c);
   const im=new Image(); im.onload=()=>{ c.getContext('2d').drawImage(im,0,0,512,512); t.needsUpdate=true; }; im.src='/oshiro/common/assets/tex/ed_mk_'+n+'.webp'; }
 /* 調度を壁ぎわに立てる（ry: 向き） */
 function mkItem(R,n,x,z,ry,y0){ const [h,a]=ED_MK[n]; rg(R,'mk_'+n,new THREE.PlaneGeometry(h*a,h),x,(y0||0)+h/2,z,ry||0); }
+
+/* 浅草寺本堂の扁額「施無畏」（観音さまは人々から畏れを取り除くという意味） */ { const c=makeCanvas(512,200),g=c.getContext('2d'); g.fillStyle='#1d1a16'; g.fillRect(0,0,512,200); g.strokeStyle='#c9a24a'; g.lineWidth=14; g.strokeRect(7,7,498,186); g.fillStyle='#e2c068'; g.font='bold 120px "Hiragino Mincho ProN","Noto Serif JP",serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('施無畏',256,104); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; addMat('semui',new THREE.MeshBasicMaterial({map:t})); }
+addMat('ranmaG',std({color:0x2c5a40,roughness:.7}));
 for(const [k,file,w,h] of [['kmTsuru','km_fs_tsuru',256,512],['kmTake','km_fs_take',256,512],['kmByobu','km_byobu',1024,512]]){ const A=artTex(file,w,h,'#c9a64a'); addMat(k,artMat(A,A.t,1)); }
 /* ================= 城の部品 ================= */
 /* 巨石（蛸石・肥後石）: 一枚の大きな花崗岩 */
@@ -2995,13 +2998,20 @@ B=BS;
   const w=10,d=9,h=3.2; shell(R,w,d,h,{floor:'tatami',ftile:1.8,wall:'plIn',front:'tl_f_shoji',ceil:'woodGrain',door:1.6,doorMat:'noren',lamps:2});
   rb(R,'darkwood',-w/2+.1,-w/2+1,0,.25,-1.5,1.5,true); rb(R,'woodGrain',w/2-1.2,w/2-.1,0,.12,-d/2+.2,-d/2+1.4); }
 
-/* 浅草寺の本堂（観音堂）の中（江戸後期だけ）。手前が参拝の人の外陣、柵の奥が僧の勤める内陣。内陣の御宮殿に本尊の観音さま（秘仏）をまつる（中のようすは想像） */
-{ const R=RD.hondo=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(585,-677.45,0,1),roomTxt('浅草寺 本堂（観音堂）','せんそうじ ほんどう','手前の板敷きが、だれでもお参りできる外陣。柵の奥が僧の勤める内陣で、まん中の金色の御宮殿に本尊の聖観世音菩薩がまつられています。本尊は秘仏で、僧も見ることができません。御宮殿の前には、代わりに拝むための「お前立ち」の観音さまが置かれます。外陣の長押には、人々が願いをこめて納めた大きな絵馬が掛けられていました（中のようすは想像）。',[['本尊','聖観世音菩薩（秘仏）'],['本堂','慶安2年（1649）家光の再建（昭和20年に焼失）'],['縁日','毎月18日']])));
-  const w=22,d=16,h=6.6; shell(R,w,d,h,{floor:'woodGrain',ftile:2.4,wall:'plIn',wallSide:'plIn',front:'plIn',ceil:'edRenge',ctile:3.2,door:3.2,doorH:3.2,doorMat:'darkwood',lamps:4});
-  /* 内陣の柵（外陣から先へは入れない） */ rb(R,'shu',-w/2,w/2,0,1.1,-1.2,-1.0,true); for(let x=-w/2+.4;x<w/2;x+=1.2) rb(R,'shu',x-.07,x+.07,0,1.1,-1.15,-1.05);
-  /* 内陣の床を一段高く、奥に須弥壇 */ rb(R,'darkwood',-w/2,w/2,0,.35,-d/2,-1.2,true); rb(R,'blackLacq'in M?'blackLacq':'darkwood',-3.4,3.4,.35,1.15,-7.6,-5.2,true);
-  /* 長押と腰の板 */ for(const [a0,a1,b0,b1] of [[-w/2,w/2,-d/2+.02,-d/2+.12],[-w/2+.02,-w/2+.12,-d/2,d/2],[w/2-.12,w/2-.02,-d/2,d/2],[-w/2,w/2,d/2-.12,d/2-.02]]){ rb(R,'darkwood',a0,a1,2.9,3.15,b0,b1); rb(R,'darkwood',a0,a1,0,.9,b0,b1); }
-  /* 柱 */ for(const x of [-7,-2.4,2.4,7]) for(const z of [-4,3]) rb(R,'shu',x-.28,x+.28,0,h,z-.28,z+.28,true); }
+/* 浅草寺の本堂（観音堂）の中（江戸後期だけ）。手前の外陣は土間で、だれでも履物のまま入ってお参りした。
+   朱塗りの柱と黒い格子で仕切った奥が内陣で、まん中の金色の御宮殿に本尊の観音さま（秘仏）をまつる。内陣の正面の上に扁額「施無畏」、前に横長の大きな賽銭箱（細部は想像） */
+{ const R=RD.hondo=mkRoom(Object.assign({era:'edo',sub:'late'},doorAt(585,-677.45,0,1),roomTxt('浅草寺 本堂（観音堂）','せんそうじ ほんどう','手前の広い外陣は土間で、だれでも履物のまま入ってお参りできました。朱塗りの柱と黒い格子で仕切られた奥が内陣で、まん中の金色の御宮殿に本尊の聖観世音菩薩がまつられています。本尊は秘仏で、僧も見ることができません。内陣の正面の上には「施無畏（観音さまは人々の畏れを取り除く）」の扁額、その前に横長の大きな賽銭箱。外陣の長押には人々が納めた大きな絵馬がずらりと掛けられ、天井から釣灯籠が下がっていました（いまの本堂は昭和33年の再建で、天井の龍と天人の絵はそのときのもの。この江戸の本堂の細部は想像）。',[['本尊','聖観世音菩薩（秘仏）'],['本堂','慶安2年（1649）家光の再建（昭和20年に焼失）'],['外陣','土間。履物のままお参り'],['縁日','毎月18日']])));
+  const w=28,d=20,h=9.5,PZ=-2; shell(R,w,d,h,{floor:'stone',ftile:1.4,wall:'plIn',wallSide:'plIn',front:'darkwood',ceil:'edRenge',ctile:3.6,door:5.6,doorH:4.2,doorMat:'darkwood',lamps:0});
+  const ST=(x,z,top)=>{ rb(R,'shu',x-.34,x+.34,0,top,z-.34,z+.34,true); rb(R,'shu',x-.5,x+.5,top,top+.35,z-.5,z+.5); rb(R,'shu',x-.85,x+.85,top+.35,top+.65,z-.4,z+.4); rb(R,'shu',x-.4,x+.4,top+.35,top+.65,z-.85,z+.85); };
+  /* 外陣の柱と組物、柱をつなぐ虹梁 */ for(const x of [-13,-8,-4,4,8,13]) for(const z of [9.4,4.5]) ST(x,z,6.6); for(const z of [9.4,4.5,PZ]) rb(R,'shu',-w/2,w/2,6.95,7.6,z-.3,z+.3); for(const x of [-13,-8,-4,4,8,13]) rb(R,'shu',x-.3,x+.3,6.95,7.6,PZ,d/2);
+  /* 壁の朱の柱と長押（白壁を区切る） */ for(const z of [-9.7,-6,PZ,1,4.5,8]) for(const x of [-w/2+.25,w/2-.25]) rb(R,'shu',x-.25,x+.25,0,h,z-.25,z+.25); for(const [a0,a1,b0,b1] of [[-w/2+.02,-w/2+.14,-d/2,d/2],[w/2-.14,w/2-.02,-d/2,d/2]]){ rb(R,'shu',a0,a1,3.6,3.9,b0,b1); rb(R,'shu',a0,a1,6.9,7.2,b0,b1); rb(R,'darkwood',a0,a1,0,1.0,b0,b1); }
+  /* 内陣との仕切り: 朱の柱、黒い格子、上に緑の欄間 */ for(const x of [-13,-8,-4,4,8,13]) ST(x,PZ,6.6);
+  for(const [x0,x1] of [[-13,-8],[-8,-4],[4,8],[8,13]]){ rb(R,'darkwood',x0+.34,x1-.34,0,.6,PZ-.1,PZ+.1,true); for(let x=x0+.6;x<x1-.4;x+=.3) rb(R,'darkwood',x-.04,x+.04,.6,4.4,PZ-.05,PZ+.05,true); for(let y=.9;y<4.4;y+=.3) rb(R,'darkwood',x0+.34,x1-.34,y-.04,y+.04,PZ-.05,PZ+.05); rb(R,'kinpaku',x0+.34,x1-.34,.62,4.38,PZ-1.2,PZ-1.1); }
+  rb(R,'ranmaG',-w/2+.2,w/2-.2,4.5,5.8,PZ-.06,PZ+.06); for(let x=-w/2+.4;x<w/2-.3;x+=.32) rb(R,'darkwood',x-.03,x+.03,4.5,5.8,PZ+.07,PZ+.11); rb(R,'kinpaku',-w/2,w/2,4.42,4.5,PZ-.1,PZ+.14); rb(R,'kinpaku',-w/2,w/2,5.8,5.88,PZ-.1,PZ+.14);
+  rg(R,'semui',new THREE.PlaneGeometry(3.4,1.33),0,6.15,PZ+.42);
+  /* 内陣の奥の壁は暗い板と金の羽目 */ rb(R,'darkwood',-w/2,w/2,0,h,-d/2+.02,-d/2+.12); rb(R,'kinpaku',-5,5,1.4,5.4,-d/2+.13,-d/2+.16); for(const x of [-w/2+.1,w/2-.1]) rb(R,'darkwood',x-.08,x+.08,0,h,-d/2,PZ);
+  /* 内陣（一段高い板敷き）と須弥壇 */ rb(R,'woodGrain',-w/2,w/2,0,.45,-d/2,PZ-.1,true); rb(R,'blackLacq'in M?'blackLacq':'darkwood',-3.6,3.6,.45,1.3,-8.6,-6.0,true); rb(R,'kinpaku',-3.6,3.6,1.3,1.36,-8.6,-6.0);
+  /* 横長の大きな賽銭箱（上は斜めの桟） */ rb(R,'darkwood',-4.2,4.2,0,1.05,PZ+.6,PZ+2.3,true); for(let x=-4;x<4.1;x+=.28) rb(R,'woodGrain',x-.05,x+.05,1.05,1.2,PZ+.7,PZ+2.2); }
 B=BS;
 /* ================= 名所 ================= */
 const SPOTS=[
@@ -3757,11 +3767,14 @@ const YLAN=[],YDOOR=[],YPROP=[];
   T('bg_yomawari',592,-554,'浅草の夜回り','火の用心。浅草の観音さまの前も、夜は真っ暗だからね。','late');
 }
 /* 浅草寺の本堂の中 */
-{ const G=RD.hondo; rp(G,'hd_zushi',0,1.15,-6.4,{}); rp(G,'hd_tengai',0,4.1,-5.0,{}); rp(G,'hd_kebyo_a',-2.6,1.15,-6.0,{}); rp(G,'hd_kebyo_b',2.6,1.15,-6.0,{}); rp(G,'hd_toro',-4.6,3.4,-5.4,{}); rp(G,'hd_toro',4.6,3.4,-5.4,{}); rp(G,'hd_dan',0,.35,-3.6,{}); rp(G,'hd_koro',-1.8,.35,-2.6,{}); rp(G,'hd_kin',2.0,.35,-2.4,{}); rp(G,'hd_mokugyo',-3.4,.35,-2.4,{});
-  rp(G,'hd_so_kyo',.4,.35,-2.2,{},true,['読経する僧','観音さまのお経「観音経」を読んでおります。']); rp(G,'hd_so_a',-5.6,.35,-3.0,{},true,['浅草寺の僧','ご本尊は秘仏。わたしども僧も、そのお姿を拝むことはできません。']); rp(G,'hd_so_b',5.6,.35,-3.0,{flip:true},true,['浅草寺の僧','太鼓をたたいて、お経の拍子をとります。']);
-  rp(G,'hd_saisen',0,0,.4,{}); rp(G,'hd_ogamu_otoko',-1.6,0,2.0,{},true,['参拝の商人','商売繁盛をお願いしております。']); rp(G,'hd_ogamu_baba',1.4,0,2.4,{},true,['参拝のおばあさん','なむかんぜおんぼさつ……。']); rp(G,'hd_ogamu_haha',-3.6,0,3.2,{},true,['子連れの母','この子が元気に育ちますように。']);
-  rp(G,'hd_sanpai_onna',3.4,0,1.6,{flip:true},true,['参拝の娘','お賽銭をえいっと投げ入れるの。']); rp(G,'hd_sanpai_jii',5.4,0,3.6,{flip:true},true,['参拝のおじいさん','毎月十八日のご縁日には、かならずお参りしております。']);
-  rp(G,'hd_ema_ryu',-10.9,3.6,-.2,{}); rp(G,'hd_ema_musha',-10.9,3.6,4.2,{}); rp(G,'hd_ema_fune',10.9,3.6,2.0,{}); }
+{ const G=RD.hondo,PZ=-2; rp(G,'hd_zushi',0,1.36,-7.6,{}); rp(G,'hd_tengai',0,4.6,-5.6,{}); rp(G,'hd_kebyo_a',-2.8,1.36,-7.0,{}); rp(G,'hd_kebyo_b',2.8,1.36,-7.0,{}); rp(G,'hd_toro',-5.2,3.4,-6.2,{}); rp(G,'hd_toro',5.2,3.4,-6.2,{}); rp(G,'hd_dan',0,.45,-4.6,{}); rp(G,'hd_koro',-1.9,.45,-3.6,{}); rp(G,'hd_kin',2.1,.45,-3.4,{}); rp(G,'hd_mokugyo',-3.4,.45,-3.4,{});
+  rp(G,'hd_so_kyo',.4,.45,-3.2,{},false,null); rp(G,'hd_so_a',-6.2,.45,-4,{},false,null); rp(G,'hd_so_b',6.2,.45,-4,{flip:true},false,null);
+  rp(G,'hd_saisen_ko',-6,0,PZ+.7,{}); rp(G,'hd_saisen_ko',6,0,PZ+.7,{});
+  rp(G,'hd_ogamu_otoko',-1.6,0,PZ+3.2,{},true,['参拝の商人','商売繁盛をお願いしております。']); rp(G,'hd_ogamu_baba',1.4,0,PZ+3.4,{},true,['参拝のおばあさん','なむかんぜおんぼさつ……。']); rp(G,'hd_ogamu_haha',-3.4,0,PZ+3.6,{},true,['子連れの母','この子が元気に育ちますように。']);
+  rp(G,'hd_sanpai_onna',3.4,0,PZ+3.0,{flip:true},true,['参拝の娘','お賽銭をえいっと投げ入れるの。']); rp(G,'hd_sanpai_jii',6.4,0,PZ+5.6,{flip:true},true,['参拝のおじいさん','毎月十八日のご縁日には、かならずお参りしております。']); rp(G,'la_family',-8,0,6.5,{},true,['参拝の家族','本堂の中は土間だから、履物のまま上がれるんだよ。']); rp(G,'la_musume_a',9.5,0,6.0,{flip:true},true,['町娘','見上げると、絵馬がずらりと並んでいるわ。']);
+  for(const [x,z] of [[-8,9.0],[8,9.0],[-8,4.0],[8,4.0],[-4,6.6],[4,6.6]]) rp(G,'hd_toro',x,4.7,z,{});
+  const EMA=['hd_ema_ryu','hd_ema_musha','hd_ema_fune']; let k=0; for(const z of [-.5,3,6.5]) for(const x of [-13.75,13.75]) rp(G,EMA[k++%3],x,4.1,z,{});
+}
 /* 町の灯り・店先の道具・高札 */
 const decoT=new Crowd(GE,900,false),decoTe=new Crowd(GEe,400,false),decoL=new Crowd(GL,600,false);
 for(const [s2,x,y,z,sub,o] of BANP) (sub==='late'?decoL:sub==='early'?decoTe:decoT).add(s2,x,y,z,o); for(const [k,x,z,y] of LDECO) decoL.add(k,x,y||0,z,y?{shadow:false}:undefined); for(const [i,q] of LSHOP.entries()){ if(i%3) continue; const c=Math.cos(q.ry),s=Math.sin(q.ry); decoL.add(i%2?'lan_white':'lan_red',q.cx+(q.F+.6)*s,1.7,q.cz+(q.F+.6)*c,{shadow:false}); }
